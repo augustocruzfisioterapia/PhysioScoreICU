@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>PhysioScore ICU</title>
+    <style>
+        :root {
+            --bg: #f6f8fb; --surface: #ffffff; --surface2: #f1f4f9;
+            --text: #1a1d26; --text2: #5a6170; --text3: #8b919e; --border: #e2e6ed;
+            --accent: #0d9488; --accent2: #14b8a6; --accent-light: #e6f7f5;
+            --accent-glow: rgba(13,148,136,0.15); --danger: #e5534b; --danger-bg: #fdf0ef;
+            --warning: #d4a017; --warning-bg: #fef9e7; --success: #2d8a56; --success-bg: #edf7f1;
+            --info: #3b6fb6; --info-bg: #eaf1fb; --radius: 14px; --radius-sm: 10px; --radius-xs: 7px;
+            --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04);
+            --shadow-lg: 0 4px 20px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+        }
+        .dark {
+            --bg: #0f1419; --surface: #1a2129; --surface2: #222b35;
+            --text: #e6edf3; --text2: #9ba9b8; --text3: #6b7888; --border: #2d3748;
+            --accent: #2dd4bf; --accent2: #5eead4; --accent-light: #0d2e2a;
+            --accent-glow: rgba(45,212,191,0.2); --danger: #f87171; --danger-bg: #3b1a1a;
+            --warning: #facc15; --warning-bg: #3b2f0a; --success: #4ade80; --success-bg: #0d2e1a;
+            --info: #60a5fa; --info-bg: #1a2744;
+            --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.3);
+            --shadow-lg: 0 4px 20px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.3);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.5; min-height: 100vh; transition: background 0.3s, color 0.3s; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
+        .app-shell { max-width: 820px; margin: 0 auto; padding: 12px 16px 40px; min-height: 100vh; display: flex; flex-direction: column; }
+        .topbar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); position: sticky; top: 10px; z-index: 100; margin-bottom: 14px; flex-wrap: wrap; }
+        .logo-area { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; flex: 1; min-width: 120px; }
+        .logo-icon { width: 38px; height: 38px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; flex-shrink: 0; }
+        .logo-text { font-weight: 700; font-size: 1rem; color: var(--text); letter-spacing: -0.2px; }
+        .logo-sub { font-size: 0.68rem; color: var(--text3); font-weight: 500; }
+        .topbar-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 8px 15px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; font-size: 0.82rem; font-weight: 500; transition: var(--transition); white-space: nowrap; font-family: var(--font); user-select: none; text-decoration: none; }
+        .btn:active { transform: scale(0.96); }
+        .btn:hover { border-color: var(--accent); box-shadow: var(--shadow); }
+        .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+        .btn-primary:hover { background: var(--accent2); }
+        .btn-accent-outline { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+        .btn-sm { padding: 6px 12px; font-size: 0.75rem; border-radius: 16px; }
+        .btn-xs { padding: 4px 10px; font-size: 0.7rem; border-radius: 14px; }
+        .btn-ghost { background: transparent; border-color: transparent; }
+        .btn-ghost:hover { background: var(--surface2); border-color: transparent; }
+        .btn-danger { color: var(--danger); border-color: #fecaca; background: var(--danger-bg); }
+        .btn-link { color: var(--info); border-color: transparent; background: var(--info-bg); font-size: 0.68rem; padding: 4px 10px; }
+        .btn-link:hover { border-color: var(--info); }
+        .btn-block { width: 100%; justify-content: center; }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); margin-bottom: 12px; }
+        .card-header { font-weight: 700; font-size: 0.9rem; margin-bottom: 12px; display: flex; align-items: center; gap: 7px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        .patient-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--surface2); border-radius: var(--radius-sm); cursor: pointer; border: 1px solid transparent; transition: var(--transition); margin-bottom: 5px; }
+        .patient-row:hover { border-color: var(--accent); background: var(--surface); }
+        .pat-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent-light); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; }
+        .pat-name { font-weight: 600; font-size: 0.88rem; flex: 1; }
+        .pat-bed { background: var(--accent); color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; white-space: nowrap; }
+        input, select, textarea { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-xs); background: var(--surface); color: var(--text); font-size: 0.88rem; font-family: var(--font); transition: var(--transition); margin-bottom: 8px; -webkit-appearance: none; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+        textarea { resize: vertical; min-height: 70px; }
+        label { font-weight: 600; font-size: 0.72rem; color: var(--text2); display: block; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media (max-width: 480px) { .form-grid { grid-template-columns: 1fr; } }
+        .scorer-container { background: var(--surface2); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; border: 1px solid var(--border); }
+        .scorer-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+        .scorer-title { font-weight: 700; font-size: 0.9rem; color: var(--accent); }
+        .scorer-title small { display: block; font-weight: 400; font-size: 0.68rem; color: var(--text3); }
+        .scorer-subtitle { font-size: 0.7rem; color: var(--text3); margin-bottom: 12px; line-height: 1.4; }
+        .scorer-links { display: flex; gap: 4px; flex-wrap: wrap; margin-left: auto; }
+        .scorer-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; margin-bottom: 6px; border-radius: var(--radius-xs); background: var(--surface); border: 1px solid var(--border); transition: var(--transition); gap: 10px; flex-wrap: wrap; }
+        .scorer-item:hover { border-color: var(--accent); }
+        .scorer-item.filled { border-color: var(--accent); background: var(--accent-light); }
+        .scorer-label { font-size: 0.78rem; font-weight: 500; flex: 1; min-width: 120px; color: var(--text); }
+        .scorer-label small { display: block; font-weight: 400; color: var(--text3); font-size: 0.68rem; margin-top: 2px; }
+        .scorer-radio { display: flex; gap: 2px; flex-wrap: wrap; }
+        .radio-opt { padding: 5px 10px; border-radius: 14px; font-size: 0.7rem; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text2); transition: var(--transition); user-select: none; white-space: nowrap; }
+        .radio-opt:hover { border-color: var(--accent); color: var(--text); }
+        .radio-opt.selected { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+        .scorer-radio-vertical { display: flex; flex-direction: column; gap: 3px; width: 100%; margin-top: 6px; }
+        .radio-opt-vertical { padding: 10px 14px; border-radius: var(--radius-sm); font-size: 0.78rem; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text2); transition: var(--transition); user-select: none; text-align: left; line-height: 1.3; }
+        .radio-opt-vertical:hover { border-color: var(--accent); color: var(--text); background: var(--surface2); }
+        .radio-opt-vertical.selected { background: var(--accent-light); color: var(--accent); border-color: var(--accent); font-weight: 600; }
+        .scorer-result { text-align: right; font-weight: 700; font-size: 1.3rem; color: var(--accent); padding: 8px 14px; background: var(--surface); border-radius: var(--radius-xs); border: 1px solid var(--border); min-width: 60px; }
+        .interpretation-box { margin-top: 10px; padding: 12px 14px; background: var(--info-bg); border-radius: var(--radius-sm); border: 1px solid var(--info); font-size: 0.75rem; color: var(--info); line-height: 1.5; }
+        /* Seções expansíveis */
+        .perme-section { border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; overflow: hidden; background: var(--surface); }
+        .perme-section-header { display: flex; align-items: center; gap: 8px; padding: 10px 14px; cursor: pointer; font-weight: 600; font-size: 0.8rem; background: var(--surface2); transition: var(--transition); user-select: none; }
+        .perme-section-header:hover { background: var(--bg); }
+        .perme-section-header .section-icon { font-size: 1.2rem; }
+        .perme-section-header .section-subtotal { margin-left: auto; font-size: 0.7rem; color: var(--accent); font-weight: 700; }
+        .perme-section-header .section-arrow { transition: transform 0.2s; font-size: 0.7rem; color: var(--text3); }
+        .perme-section-header.open .section-arrow { transform: rotate(90deg); }
+        .perme-section-body { padding: 0 14px 10px; display: none; }
+        .perme-section-body.open { display: block; }
+        .progress-bar-container { background: var(--border); border-radius: 10px; height: 8px; margin: 10px 0; overflow: hidden; }
+        .progress-bar-fill { height: 100%; border-radius: 10px; transition: width 0.4s ease; }
+        .progress-low { background: var(--danger); }
+        .progress-mid { background: var(--warning); }
+        .progress-high { background: var(--success); }
+        .subtotal-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 6px; margin-top: 10px; }
+        .subtotal-card { text-align: center; padding: 8px; background: var(--surface); border-radius: var(--radius-xs); border: 1px solid var(--border); font-size: 0.65rem; }
+        .subtotal-card .sub-val { font-size: 1rem; font-weight: 700; color: var(--accent); }
+        .subtotal-card .sub-max { font-size: 0.6rem; color: var(--text3); }
+        .perme-final-result { margin-top: 14px; padding: 18px; border-radius: var(--radius); border: 2px solid var(--accent); background: var(--accent-light); text-align: center; box-shadow: var(--shadow); }
+        .perme-final-result .perme-final-label { font-size: 0.74rem; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; }
+        .perme-final-result .perme-final-score { font-size: 3rem; line-height: 1; font-weight: 800; color: var(--accent); letter-spacing: -1px; }
+        .perme-final-result .perme-final-max { font-size: 1rem; font-weight: 700; color: var(--text2); margin-left: 3px; }
+        .perme-final-result .perme-final-classification { margin-top: 8px; font-size: 0.82rem; font-weight: 600; color: var(--text); }
+        .tool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+        .tool-card { padding: 12px; background: var(--surface2); border-radius: var(--radius-sm); cursor: pointer; text-align: center; border: 2px solid transparent; transition: var(--transition); font-weight: 600; font-size: 0.78rem; position: relative; }
+        .tool-card:hover { border-color: var(--accent); background: var(--surface); box-shadow: var(--shadow); }
+        .tool-card.active { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+        .tool-card .tool-emoji { font-size: 1.3rem; display: block; margin-bottom: 3px; }
+        .tool-card .tool-fullname { display: block; font-size: 0.6rem; font-weight: 400; color: var(--text3); margin-top: 1px; }
+        .tool-card .tool-check { position: absolute; top: -6px; right: -6px; background: var(--success); color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; }
+        .tabs-row { display: flex; gap: 4px; border-bottom: 2px solid var(--border); margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
+        .tab-item { padding: 9px 14px; cursor: pointer; font-weight: 600; font-size: 0.76rem; color: var(--text3); border-bottom: 2px solid transparent; margin-bottom: -4px; white-space: nowrap; transition: var(--transition); border-radius: 8px 8px 0 0; }
+        .tab-item:hover { color: var(--text); background: var(--surface2); }
+        .tab-item.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+        .badge-up { background: var(--success-bg); color: var(--success); }
+        .badge-down { background: var(--danger-bg); color: var(--danger); }
+        .badge-stable { background: var(--warning-bg); color: var(--warning); }
+        .highlight-box { background: var(--accent-light); border: 1px solid var(--accent); border-radius: var(--radius-sm); padding: 16px; text-align: center; margin-bottom: 14px; }
+        .highlight-box h3 { margin-bottom: 4px; font-size: 1rem; color: var(--accent); }
+        .highlight-box p { font-size: 0.8rem; color: var(--text2); margin-bottom: 10px; }
+        .disclaimer-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--radius-sm); padding: 10px 14px; font-size: 0.7rem; color: #92400e; margin-bottom: 12px; line-height: 1.4; }
+        .dark .disclaimer-box { background: #422006; border-color: #713f12; color: #fcd34d; }
+        .app-footer { margin-top: auto; padding: 16px 0 8px; text-align: center; font-size: 0.72rem; color: var(--text3); }
+        .app-footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; }
+        .modal { background: var(--surface); border-radius: var(--radius); padding: 20px; max-width: 650px; width: 100%; max-height: 88vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+        .modal h3 { margin-bottom: 14px; font-size: 1rem; }
+        .hidden { display: none !important; }
+        .empty-msg { text-align: center; padding: 30px; color: var(--text3); }
+        .mt-4 { margin-top: 4px; } .mt-8 { margin-top: 8px; } .mb-8 { margin-bottom: 8px; }
+        .gap-8 { gap: 8px; } .flex-wrap { display: flex; flex-wrap: wrap; }
+        .text-sm { font-size: 0.78rem; } .text-xs { font-size: 0.68rem; } .text-muted { color: var(--text3); }
+        .chart-container { position: relative; width: 100%; max-width: 400px; margin: 10px auto; }
+        .chart-container canvas { width: 100% !important; height: auto !important; }
+        .line-chart-container { position: relative; width: 100%; max-width: 600px; margin: 10px auto; height: 200px; }
+        .radar-legend { display: flex; gap: 16px; justify-content: center; font-size: 0.7rem; margin-top: 8px; color: var(--text2); }
+        .radar-legend span { display: flex; align-items: center; gap: 4px; }
+        .radar-legend .legend-dash { width: 16px; height: 2px; border-top: 2px dashed rgba(13,148,136,0.5); }
+        .radar-legend .legend-solid { width: 16px; height: 2px; background: #0d9488; }
+        @media print { .topbar, .app-footer, .btn, .modal-overlay { display: none !important; } .card { box-shadow: none; border: 1px solid #ccc; } body { background: #fff; color: #000; } }
+    </style>
+</head>
+<body>
+    <div class="app-shell" id="appRoot">
+        <header class="topbar">
+            <div class="logo-area" id="logoHome"><div class="logo-icon">📊</div><div><div class="logo-text">PhysioScore ICU</div><div class="logo-sub">O app do Fisioterapeuta da UTI</div></div></div>
+            <div class="topbar-actions"><button class="btn btn-sm btn-ghost" id="btnHome" title="Home">🏠</button><button class="btn btn-sm" id="darkToggle" title="Modo claro/noturno">🌙</button></div>
+        </header>
+        <main id="mainContent" style="flex:1;"></main>
+        <footer class="app-footer"><p>Desenvolvido por <strong>Augusto Cruz</strong> - Fisioterapeuta Intensivista</p><p><a href="https://instagram.com/augustocruzfisioterapia" target="_blank">@augustocruzfisioterapia</a></p></footer>
+    </div>
+    <div class="modal-overlay hidden" id="modalPatient"><div class="modal" id="modalPatientInner"></div></div>
+    <div class="modal-overlay hidden" id="modalReport"><div class="modal" id="modalReportInner"></div></div>
+    <div class="modal-overlay hidden" id="modalChart"><div class="modal" id="modalChartInner"></div></div>
+    <div class="modal-overlay hidden" id="modalDisclaimer"><div class="modal" id="modalDisclaimerInner"></div></div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js">
+    </script>
+    <script>
+        (function() {
+            const STORE_KEY = 'psicu_data_v10_fix';
+            let store = { patients: [], assessments: {}, goals: {}, quickEvals: [], settings: { darkMode: false } };
+            let chartInstances = {};
+            let currentOpenToolId = null;
+
+            const DOMAIN_GROUPS = {
+                neuro: { label: '🧠 Neuro / Consciência & Delirium', tools: ['gcs','four','rass','sas','nihss','cam_icu','icdsc'] },
+                funcional: { label: '💪🚶⚡ Força / Mobilidade / Funcional', tools: ['mrc_ss','ims','soms','jh_hlm','perme','fss_icu','pfit_s','cpax'] },
+                dor: { label: '😣 Dor / Conforto', tools: ['eva_nrs','bps','cpot'] }
+            };
+
+            function getLayout(options) { return options.length > 6 ? 'vertical' : 'horizontal'; }
+
+            // ============ PERME SCORE CORRIGIDO (7 seções, 17 itens, máximo 32) ============
+            const PERME_SECTIONS = [
+                {
+                    id: 'mental', title: 'Estado Mental', icon: '🧠', max: 3,
+                    items: [
+                        { id:'perme_m1', label:'Estado de alerta no começo da avaliação', options:[{v:0,t:'Não responsivo'},{v:1,t:'Letárgico'},{v:2,t:'Acordado e alerta'}], layout:'horizontal' },
+                        { id:'perme_m2', label:'Paciente consegue seguir 2 entre 3 comandos?', options:[{v:0,t:'Não'},{v:1,t:'Sim'}], layout:'horizontal' }
+                    ]
+                },
+                {
+                    id: 'barreiras', title: 'Potenciais Barreiras à Mobilidade', icon: '⚠️', max: 4,
+                    items: [
+                        { id:'perme_b1', label:'Paciente está em ventilação mecânica ou VNI?', options:[{v:0,t:'Sim'},{v:1,t:'Não'}], layout:'horizontal' },
+                        { id:'perme_b2', label:'Dor durante a avaliação ou atividade', options:[{v:0,t:'Incapaz de determinar dor ou paciente indica sentir dor'},{v:1,t:'Sem dor'}], layout:'vertical' },
+                        { id:'perme_b3', label:'Paciente apresenta 2 ou mais dispositivos, acessos, tubos, cateteres ou drenos?', help:'Considerar: oxigenoterapia, cateter vesical, TOT, TQT, CVC, acesso periférico, PAI, cateter de diálise, SNG, dreno de tórax, marcapasso, cateter de artéria pulmonar, BIA, DAVE, TRSC, ventriculostomia, dreno lombar, curativo a vácuo.', options:[{v:0,t:'Sim'},{v:1,t:'Não'}], layout:'vertical' },
+                        { id:'perme_b4', label:'Paciente está em infusão endovenosa contínua?', help:'Considerar: vasopressores, inotrópicos, insulina, antiarrítmicos, sedação, antibióticos, fluidos, eletrólitos, transfusão.', options:[{v:0,t:'Sim'},{v:1,t:'Não'}], layout:'vertical' }
+                    ]
+                },
+                {
+                    id: 'forca', title: 'Força Funcional', icon: '💪', max: 4,
+                    items: [
+                        { id:'perme_f1', label:'Perna esquerda: erguer contra gravidade ~20°, joelho estendido?', options:[{v:0,t:'Não'},{v:1,t:'Sim'}], layout:'horizontal' },
+                        { id:'perme_f2', label:'Perna direita: erguer contra gravidade ~20°, joelho estendido?', options:[{v:0,t:'Não'},{v:1,t:'Sim'}], layout:'horizontal' },
+                        { id:'perme_f3', label:'Braço esquerdo: elevar contra gravidade ~45°, cotovelo estendido?', options:[{v:0,t:'Não'},{v:1,t:'Sim'}], layout:'horizontal' },
+                        { id:'perme_f4', label:'Braço direito: elevar contra gravidade ~45°, cotovelo estendido?', options:[{v:0,t:'Não'},{v:1,t:'Sim'}], layout:'horizontal' }
+                    ]
+                },
+                {
+                    id: 'leito', title: 'Mobilidade no Leito', icon: '🛏️', max: 6,
+                    items: [
+                        { id:'perme_l1', label:'Supino para sentado', options:[{v:0,t:'Não avaliado ou assistência total (<25%)'},{v:1,t:'Máxima assistência (25-50%)'},{v:2,t:'Moderada assistência (50-75%)'},{v:3,t:'Mínima assistência (>75%) ou supervisão'}], layout:'vertical' },
+                        { id:'perme_l2', label:'Equilíbrio estático sentado à beira do leito', options:[{v:0,t:'Não avaliado ou assistência total (<25%)'},{v:1,t:'Máxima assistência (25-50%)'},{v:2,t:'Moderada assistência (50-75%)'},{v:3,t:'Mínima assistência (>75%) ou supervisão'}], layout:'vertical' }
+                    ]
+                },
+                {
+                    id: 'transferencias', title: 'Transferências', icon: '🪑', max: 9,
+                    items: [
+                        { id:'perme_t1', label:'Sentado para em pé', options:[{v:0,t:'Não avaliado ou assistência total (<25%)'},{v:1,t:'Máxima assistência (25-50%)'},{v:2,t:'Moderada assistência (50-75%)'},{v:3,t:'Mínima assistência (>75%) ou supervisão'}], layout:'vertical' },
+                        { id:'perme_t2', label:'Equilíbrio estático em pé', options:[{v:0,t:'Não avaliado ou assistência total (<25%)'},{v:1,t:'Máxima assistência (25-50%)'},{v:2,t:'Moderada assistência (50-75%)'},{v:3,t:'Mínima assistência (>75%) ou supervisão'}], layout:'vertical' },
+                        { id:'perme_t3', label:'Transferência do leito para cadeira ou vice-versa', options:[{v:0,t:'Não avaliado ou assistência total (<25%)'},{v:1,t:'Máxima assistência (25-50%)'},{v:2,t:'Moderada assistência (50-75%)'},{v:3,t:'Mínima assistência (>75%) ou supervisão'}], layout:'vertical' }
+                    ]
+                },
+                {
+                    id: 'marcha', title: 'Marcha', icon: '🚶', max: 3,
+                    items: [
+                        { id:'perme_ma1', label:'Marcha', help:'Sequência de movimentos dos pés com ciclos completos realizados diversas vezes. Passos à beira do leito ou durante transferências NÃO devem ser considerados marcha.', options:[{v:0,t:'Não avaliado ou assistência total (<25%)'},{v:1,t:'Máxima assistência (25-50%)'},{v:2,t:'Moderada assistência (50-75%)'},{v:3,t:'Mínima assistência (>75%) ou supervisão'}], layout:'vertical' }
+                    ]
+                },
+                {
+                    id: 'endurance', title: 'Endurance', icon: '⏱️', max: 3,
+                    items: [
+                        { id:'perme_e1', label:'Distância percorrida em 2 minutos', help:'Considerar o total percorrido independentemente do nível de assistência, com ou sem dispositivo de auxílio. Períodos de descanso em pé ou sentado incluídos nos 2 minutos.', options:[{v:0,t:'Incapaz de deambular ou não avaliado'},{v:1,t:'1-15 metros'},{v:2,t:'15-30 metros'},{v:3,t:'≥30 metros'}], layout:'vertical' }
+                    ]
+                }
+            ];
+
+            // Perme calc function
+            function calcPermeScore(items) {
+                let total = 0;
+                PERME_SECTIONS.forEach(section => {
+                    section.items.forEach(item => {
+                        if (items[item.id] !== undefined && items[item.id] !== null) {
+                            total += items[item.id];
+                        }
+                    });
+                });
+                return total;
+            }
+
+            function getPermeClassification(score) {
+                if (score >= 25) return { label: 'Maior independência funcional e menor barreira à mobilidade', cls: 'badge-up' };
+                if (score >= 17) return { label: 'Mobilidade moderada, com participação ativa parcial', cls: 'badge-stable' };
+                if (score >= 9) return { label: 'Mobilidade baixa, com alta dependência funcional', cls: 'badge-stable' };
+                return { label: 'Mobilidade extremamente limitada', cls: 'badge-down' };
+            }
+
+            const TOOLS = {
+                gcs: {
+                    id:'gcs', name:'GCS', fullName:'Glasgow Coma Scale', domain:'neuro', range:'3-15',
+                    subtitle:'Abertura ocular, resposta verbal e motora.',
+                    validationUrl:'https://sci-hub.box/10.1016/s0140-6736(74)91639-0',
+                    illustrationUrl:'https://www.researchgate.net/profile/T-Belzunegui/publication/264489699/figure/fig19/AS:392390054563852@1470564487964/Figura-26-escala-de-coma-de-Glasgow-77.png',
+                    items: [
+                        { id:'ocular', label:'Abertura Ocular', options:[{v:4,t:'Espontânea'},{v:3,t:'Ao comando verbal'},{v:2,t:'À dor'},{v:1,t:'Nenhuma'}] },
+                        { id:'verbal', label:'Resposta Verbal', options:[{v:5,t:'Orientado'},{v:4,t:'Confuso'},{v:3,t:'Palavras inapropriadas'},{v:2,t:'Sons incompreensíveis'},{v:1,t:'Nenhuma'}] },
+                        { id:'motora', label:'Resposta Motora', options:[{v:6,t:'Obedece comandos'},{v:5,t:'Localiza dor'},{v:4,t:'Retirada à dor'},{v:3,t:'Flexão anormal'},{v:2,t:'Extensão anormal'},{v:1,t:'Nenhuma'}] }
+                    ],
+                    calc: items => (items.ocular||0)+(items.verbal||0)+(items.motora||0),
+                    interpretation: s => s>=13?'Lesão leve':s>=9?'Moderada':s>=3?'Grave':'Coma profundo'
+                },
+                four: {
+                    id:'four', name:'FOUR', fullName:'Full Outline of UnResponsiveness', domain:'neuro', range:'0-16',
+                    subtitle:'Resposta ocular, motora, reflexos de tronco e respiração.',
+                    validationUrl:'https://sci-hub.box/10.4065/84.8.694',
+                    illustrationUrl:'https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=2719522_694fig1.jpg',
+                    items: [
+                        { id:'ocular', label:'Resposta Ocular', options:[{v:4,t:'Pálpebras abertas, piscando'},{v:3,t:'Abre ao comando'},{v:2,t:'Abre com estímulo doloroso'},{v:1,t:'Não abre'},{v:0,t:'Sem resposta ocular'}] },
+                        { id:'motora', label:'Resposta Motora', options:[{v:4,t:'Sinal de positivo'},{v:3,t:'Localiza dor'},{v:2,t:'Flexão à dor'},{v:1,t:'Extensão à dor'},{v:0,t:'Sem resposta'}] },
+                        { id:'tronco', label:'Reflexos de Tronco', options:[{v:4,t:'Pupilas e córnea presentes'},{v:3,t:'Uma pupila fixa'},{v:2,t:'Pupilas OU córnea ausentes'},{v:1,t:'Pupilas E córnea ausentes'},{v:0,t:'Todos ausentes'}] },
+                        { id:'respiracao', label:'Respiração', options:[{v:4,t:'Não intubado, padrão regular'},{v:3,t:'Cheyne-Stokes'},{v:2,t:'Irregular'},{v:1,t:'Intubado, acima da FR do ventilador'},{v:0,t:'Apneia ou FR = ventilador'}] }
+                    ],
+                    calc: items => (items.ocular||0)+(items.motora||0)+(items.tronco||0)+(items.respiracao||0),
+                    interpretation: s => s>=13?'Bom prognóstico neurológico':s>=9?'Lesão moderada':s>=5?'Lesão grave':'Muito grave'
+                },
+                rass: {
+                    id:'rass', name:'RASS', fullName:'Richmond Agitation-Sedation Scale', domain:'neuro', range:'−5 a +4',
+                    subtitle:'Nível de sedação/agitação.',
+                    validationUrl:'https://sci-hub.box/10.1164/rccm.2107138',
+                    items: [{ id:'nivel', label:'Sedação/Agitação', options:[
+                        {v:4,t:'+4 Combativo'},{v:3,t:'+3 Muito agitado'},{v:2,t:'+2 Agitado'},{v:1,t:'+1 Inquieto'},
+                        {v:0,t:'0 Alerta e calmo'},{v:-1,t:'−1 Sonolento'},{v:-2,t:'−2 Sedação leve'},
+                        {v:-3,t:'−3 Sedação moderada'},{v:-4,t:'−4 Sedação profunda'},{v:-5,t:'−5 Não despertável'}
+                    ]}],
+                    calc: items => items.nivel ?? null,
+                    interpretation: s => s>1?'Agitação – avaliar segurança':s>=-1?'Nível adequado':'Sedação profunda'
+                },
+                sas: {
+                    id:'sas', name:'SAS', fullName:'Sedation-Agitation Scale', domain:'neuro', range:'1-7',
+                    validationUrl:'https://pmc.ncbi.nlm.nih.gov/articles/PMC11025981/pdf/1806-9460-spmj-126-04-215.pdf',
+                    items: [{ id:'nivel', label:'Nível', options:[
+                        {v:7,t:'7 Agitação perigosa'},{v:6,t:'6 Muito agitado'},{v:5,t:'5 Agitado'},
+                        {v:4,t:'4 Calmo e cooperativo'},{v:3,t:'3 Sedado'},{v:2,t:'2 Muito sedado'},{v:1,t:'1 Não despertável'}
+                    ]}],
+                    calc: items => items.nivel ?? null,
+                    interpretation: s => s>=5?'Agitação':s===4?'Ideal para mobilização':'Sedado'
+                },
+                nihss: {
+                    id:'nihss', name:'NIHSS', fullName:'NIH Stroke Scale', domain:'neuro', range:'0-42',
+                    subtitle:'Avaliação de AVC – itens principais (consciência, olhar, visual, facial, motor).',
+                    illustrationUrl:'https://neurologiahu.paginas.ufsc.br/files/2012/09/NIH-Stroke-Scale.pdf',
+                    items: [
+                        { id:'c1', label:'1a. Nível de Consciência', options:[{v:0,t:'Alerta'},{v:1,t:'Sonolento'},{v:2,t:'Torporoso'},{v:3,t:'Coma'}] },
+                        { id:'c2', label:'1b. Perguntas (idade + mês)', options:[{v:0,t:'Ambas corretas'},{v:1,t:'Uma correta'},{v:2,t:'Nenhuma'}] },
+                        { id:'c3', label:'1c. Comandos (olhos + mão)', options:[{v:0,t:'Ambos'},{v:1,t:'Um'},{v:2,t:'Nenhum'}] },
+                        { id:'c4', label:'2. Olhar Conjugado', options:[{v:0,t:'Normal'},{v:1,t:'Paresia parcial'},{v:2,t:'Desvio forçado'}] },
+                        { id:'c5', label:'3. Campo Visual', options:[{v:0,t:'Normal'},{v:1,t:'Hemianopsia parcial'},{v:2,t:'Completa'},{v:3,t:'Bilateral'}] },
+                        { id:'c6', label:'4. Paralisia Facial', options:[{v:0,t:'Normal'},{v:1,t:'Leve'},{v:2,t:'Parcial'},{v:3,t:'Completa'}] },
+                        { id:'c7', label:'5. Motor MSE', options:Array.from({length:5},(_,j)=>({v:j,t:String(j)})) },
+                        { id:'c8', label:'6. Motor MSD', options:Array.from({length:5},(_,j)=>({v:j,t:String(j)})) }
+                    ],
+                    calc: items => Object.values(items).reduce((s,v)=>s+(v||0),0),
+                    interpretation: s => s===0?'Sem déficit':s<=4?'Déficit leve':s<=15?'Moderado':'Grave'
+                },
+                cam_icu: {
+                    id:'cam_icu', name:'CAM-ICU', fullName:'Confusion Assessment Method for ICU', domain:'neuro', range:'Positivo / Negativo',
+                    subtitle:'Passo a passo para diagnóstico de delirium em UTI.',
+                    validationUrl:'https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD013126.pub2/pdf/full',
+                    items: [
+                        { id:'i1', label:'1. Início agudo ou curso flutuante', help:'Houve mudança aguda do estado mental em relação ao basal? Ou o estado mental flutuou nas últimas 24h?', options:[{v:1,t:'Sim'},{v:0,t:'Não'}] },
+                        { id:'i2', label:'2. Desatenção', help:'Explique claramente que você vai falar 10 letras e que ele deve apertar a sua mão somente quando ouvir a letra "A". Fale a sequência SAVE A HAART pausadamente e de forma audível: S - A - V - E - A - H - A - A - R - T. O paciente pode cometer até dois erros sem ser considerado desatento. Mais de dois erros indicam desatenção.', options:[{v:1,t:'Sim (≥3 erros)'},{v:0,t:'Não (<3 erros)'}] },
+                        { id:'i3', label:'3. Pensamento desorganizado', help:'O paciente responde de forma incoerente, divaga ou não consegue responder perguntas simples?', options:[{v:1,t:'Sim'},{v:0,t:'Não'}] },
+                        { id:'i4', label:'4. Nível de consciência alterado', help:'RASS atual ≠ 0 (alerta e calmo)?', options:[{v:1,t:'Sim (RASS ≠ 0)'},{v:0,t:'Não (RASS = 0)'}] }
+                    ],
+                    calc: items => ((items.i1||0)+(items.i2||0)+((items.i3||items.i4)?1:0))>=3?'Positivo':'Negativo',
+                    interpretation: s => s==='Positivo'?'Delirium presente – investigar causa':'Sem delirium detectado'
+                },
+                icdsc: {
+                    id:'icdsc', name:'ICDSC', fullName:'Intensive Care Delirium Screening Checklist', domain:'neuro', range:'0-8',
+                    subtitle:'Triagem de delirium com 8 itens. Some 1 ponto para cada item presente nas últimas 24h.',
+                    validationUrl:'https://sci-hub.box/10.1590/s1807-59322011001100011',
+                    items: [
+                        { id:'i1', label:'1. Nível de consciência alterado', help:'RASS ≠ 0 ou flutuação do nível de consciência', options:[{v:1,t:'Sim'},{v:0,t:'Não'}] },
+                        { id:'i2', label:'2. Desatenção', help:'Dificuldade em manter foco ou seguir comandos', options:[{v:1,t:'Sim'},{v:0,t:'Não'}] },
+                        { id:'i3', label:'3. Desorientação', help:'Erro em local, tempo ou pessoa', options:[{v:1,t:'Sim'},{v:0,t:'Não'}] },
+                        { id:'i4', label:'4. Alucinação ou psicose', help:'Relato ou evidência de alucinações', options:[{v:1,t:'Sim'},{v:0,t:'Não'}] },
+                        { id:'i5', label:'5. Agitação ou retardo psicomotor', options:[{v:1,t:'Sim'},{v:0,t:'Não'}] },
+                        { id:'i6', label:'6. Humor ou fala inapropriados', options:[{v:1,t:'Sim'},{v:0,t:'Não'}] },
+                        { id:'i7', label:'7. Distúrbio do sono', options:[{v:1,t:'Sim'},{v:0,t:'Não'}] },
+                        { id:'i8', label:'8. Flutuação dos sintomas', help:'Variaram nas últimas 24h?', options:[{v:1,t:'Sim'},{v:0,t:'Não'}] }
+                    ],
+                    calc: items => Object.values(items).reduce((s,v)=>s+(v||0),0),
+                    interpretation: s => s>=4?'Delirium provável (≥4/8)':s>=1?'Delirium subsindrômico (1-3/8)':'Sem evidência de delirium'
+                },
+                eva_nrs: {
+                    id:'eva_nrs', name:'EVA / NRS', fullName:'Escala Visual Analógica / Numerical Rating Scale', domain:'dor', range:'0-10',
+                    subtitle:'0 = sem dor | 10 = pior dor imaginável. Paciente deve referir.',
+                    validationUrl:'https://sci-hub.box/10.1016/S1526-5900(03)00716-8',
+                    items: [{ id:'dor', label:'Intensidade da Dor', options: [
+                        {v:0,t:'0 😊'},{v:1,t:'1 🙂'},{v:2,t:'2 😐'},{v:3,t:'3 😕'},{v:4,t:'4 😣'},
+                        {v:5,t:'5 😖'},{v:6,t:'6 😫'},{v:7,t:'7 😩'},{v:8,t:'8 😰'},{v:9,t:'9 😤'},{v:10,t:'10 😡'}
+                    ]}],
+                    calc: items => items.dor ?? null,
+                    interpretation: s => s===0?'Sem dor':s<=3?'Dor leve':s<=6?'Dor moderada':'Dor intensa'
+                },
+                bps: {
+                    id:'bps', name:'BPS', fullName:'Behavioral Pain Scale', domain:'dor', range:'3-12',
+                    subtitle:'Avaliação comportamental de dor para pacientes não comunicativos.',
+                    validationUrl:'https://pdf.sciencedirectassets.com/280063/1-s2.0-S0034709417X00032/1-s2.0-S003470941730079X/main.pdf',
+                    items: [
+                        { id:'face', label:'Expressão Facial', options:[{v:1,t:'Relaxada'},{v:2,t:'Parcialmente tensa'},{v:3,t:'Totalmente tensa'},{v:4,t:'Careta'}] },
+                        { id:'ms', label:'Membros Superiores', options:[{v:1,t:'Sem movimento'},{v:2,t:'Parcialmente flexionados'},{v:3,t:'Totalmente flexionados'},{v:4,t:'Contraídos'}] },
+                        { id:'vent', label:'Tolerância à Ventilação', options:[{v:1,t:'Tolerando'},{v:2,t:'Tosse mas tolera'},{v:3,t:'Brigando com ventilador'},{v:4,t:'Impossível ventilar'}] }
+                    ],
+                    calc: items => (items.face||0)+(items.ms||0)+(items.vent||0),
+                    interpretation: s => s<=5?'Dor ausente/leve':s<=8?'Dor moderada':'Dor intensa'
+                },
+                cpot: {
+                    id:'cpot', name:'CPOT', fullName:'Critical-Care Pain Observation Tool', domain:'dor', range:'0-8',
+                    subtitle:'Ferramenta de observação de dor em pacientes críticos.',
+                    validationUrl:'https://www.scielo.br/j/rbti/a/Nj8dWkNZz4gNRyLCLYcMbxh/?format=pdf&lang=pt',
+                    items: [
+                        { id:'face', label:'Expressão Facial', options:[{v:0,t:'Relaxada/neutra'},{v:1,t:'Tensa'},{v:2,t:'Careta'}] },
+                        { id:'mov', label:'Movimentos Corporais', options:[{v:0,t:'Ausentes'},{v:1,t:'Proteção'},{v:2,t:'Agitação'}] },
+                        { id:'vent', label:'Tolerância à Ventilação', options:[{v:0,t:'Tolerando'},{v:1,t:'Tosse mas tolera'},{v:2,t:'Brigando'}] },
+                        { id:'tensa', label:'Tensão Muscular', options:[{v:0,t:'Relaxado'},{v:1,t:'Tenso/rígido'},{v:2,t:'Muito rígido'}] }
+                    ],
+                    calc: items => (items.face||0)+(items.mov||0)+(items.vent||0)+(items.tensa||0),
+                    interpretation: s => s>=3?'Dor significativa':s>=1?'Dor leve':'Sem dor detectada'
+                },
+                mrc_ss: {
+                    id:'mrc_ss', name:'MRC-SS', fullName:'Medical Research Council Sum Score', domain:'funcional', range:'0-60',
+                    subtitle:'Força muscular periférica. 0=sem contração, 1=esboço, 2=arco parcial, 3=arco completo, 4=força reduzida, 5=normal.',
+                    validationUrl:'https://sci-hub.box/10.1002/mus.880141111',
+                    items: [
+                        'Abdução Ombro D','Abdução Ombro E','Flexão Cotovelo D','Flexão Cotovelo E',
+                        'Extensão Punho D','Extensão Punho E','Flexão Quadril D','Flexão Quadril E',
+                        'Extensão Joelho D','Extensão Joelho E','Dorsiflexão Tornozelo D','Dorsiflexão Tornozelo E'
+                    ].map((l,i)=>({id:'m'+i,label:l,options:Array.from({length:6},(_,j)=>({v:j,t:String(j)}))})),
+                    calc: items => Object.values(items).reduce((s,v)=>s+(v||0),0),
+                    interpretation: s => s>=48?'Força normal':s>=36?'Fraqueza leve':s>=24?'Fraqueza moderada':'Fraqueza grave (possível ICU-AW)'
+                },
+                ims: {
+                    id:'ims', name:'IMS', fullName:'ICU Mobility Scale', domain:'funcional', range:'0-10',
+                    subtitle:'Nível máximo de mobilidade atingido na UTI.',
+                    validationUrl:'https://www.scielo.br/j/jbpneu/a/bmQQH8tc6TsLVsKj9ytdr7c/?format=pdf&lang=pt',
+                    items: [{ id:'nivel', label:'Nível de Mobilidade', options:[
+                        {v:0,t:'0 – Nada (deitado no leito)'},{v:1,t:'1 – Sentado no leito, exercícios'},
+                        {v:2,t:'2 – Transferido passivamente para cadeira'},{v:3,t:'3 – Sedestação beira leito'},
+                        {v:4,t:'4 – Ortostatismo'},{v:5,t:'5 – Transferência ativa para cadeira'},
+                        {v:6,t:'6 – Marcha estacionária'},{v:7,t:'7 – Marcha com auxílio (2+ pessoas)'},
+                        {v:8,t:'8 – Marcha com auxílio (1 pessoa)'},{v:9,t:'9 – Marcha independente com dispositivo'},
+                        {v:10,t:'10 – Marcha independente sem dispositivo'}
+                    ]}],
+                    calc: items => items.nivel ?? null,
+                    interpretation: s => s<=2?'Restrito ao leito':s<=5?'Mobilidade limitada':s<=8?'Mobilidade moderada':'Alta mobilidade'
+                },
+                soms: {
+                    id:'soms', name:'SOMS', fullName:'Surgical ICU Optimal Mobilization Score', domain:'funcional', range:'0-4',
+                    subtitle:'Surgical ICU Optimal Mobilization Score.',
+                    validationUrl:'https://pmc.ncbi.nlm.nih.gov/articles/PMC3753523/pdf/bmjopen-2013-003262.pdf',
+                    items: [{ id:'nivel', label:'Nível', options:[
+                        {v:0,t:'0 – Imóvel (sem mobilização)'},{v:1,t:'1 – Mobilização passiva (exercícios no leito)'},
+                        {v:2,t:'2 – Sentar (beira leito ou poltrona)'},{v:3,t:'3 – Em pé (ortostatismo)'},
+                        {v:4,t:'4 – Deambulação (qualquer distância)'}
+                    ]}],
+                    calc: items => items.nivel ?? null,
+                    interpretation: s => s<=1?'Imobilidade – risco de complicações':s<=2?'Mobilidade passiva/ativa':'Deambulando – bom prognóstico'
+                },
+                jh_hlm: {
+                    id:'jh_hlm', name:'JH-HLM', fullName:'Johns Hopkins Highest Level of Mobility Scale', domain:'funcional', range:'1-8',
+                    subtitle:'Identifica o maior nível de mobilidade alcançado pelo paciente durante a avaliação.',
+                    items: [{ id:'nivel', label:'Maior nível de mobilidade alcançado', options:[
+                        {v:1,t:'1 – Deitado no leito'},
+                        {v:2,t:'2 – Rola ou realiza atividades no leito'},
+                        {v:3,t:'3 – Sentado à beira do leito'},
+                        {v:4,t:'4 – Transferência ativa para a poltrona'},
+                        {v:5,t:'5 – Permanece em pé por 1 minuto'},
+                        {v:6,t:'6 – Marcha ≥ 10 passos'},
+                        {v:7,t:'7 – Marcha ≥ 7,5 metros'},
+                        {v:8,t:'8 – Marcha ≥ 75 metros'}
+                    ]}],
+                    calc: items => items.nivel ?? null,
+                    interpretation: s => s<=2?'Restrito ao leito':s<=4?'Mobilidade limitada ao leito e transferências':s<=5?'Capaz de permanecer em ortostatismo':s<=7?'Deambulação de curta distância':'Deambulação funcional'
+                },
+                perme: {
+                    id:'perme', name:'Perme', fullName:'Perme ICU Mobility Score', domain:'funcional', range:'0-32',
+                    subtitle:'Avaliação estruturada da mobilidade funcional do paciente crítico. 7 seções, 17 itens.',
+                    validationUrl:'https://www.scielo.br/j/jbpneu/a/bmQQH8tc6TsLVsKj9ytdr7c/?format=pdf&lang=pt',
+                    illustrationUrl:'https://www.jornaldepneumologia.com.br/Content/imagebank/pdf/3_provenv_aop_jbp_0301_anexo_pt.pdf',
+                    isPerme: true,
+                    items: [],
+                    calc: items => calcPermeScore(items),
+                    interpretation: s => getPermeClassification(s).label
+                },
+                fss_icu: {
+                    id:'fss_icu', name:'FSS-ICU', fullName:'Functional Status Score for ICU', domain:'funcional', range:'5-35',
+                    subtitle:'Functional Status Score for ICU. Avalia 5 tarefas funcionais.',
+                    validationUrl:'https://pmc.ncbi.nlm.nih.gov/articles/PMC5292321/pdf/nihms839020.pdf',
+                    items: ['Rolar','Supino para sentado','Sentado sem apoio','Sentado para em pé','Marcha'].map((l,i)=>({id:'f'+i,label:l,options:[
+                        {v:1,t:'1 – Dependente total'},{v:2,t:'2 – Muita assistência (25-50%)'},
+                        {v:3,t:'3 – Moderada assistência (50-75%)'},{v:4,t:'4 – Mínima assistência (≥75%)'},
+                        {v:5,t:'5 – Supervisão (sem toque)'},{v:6,t:'6 – Independente com dispositivo'},
+                        {v:7,t:'7 – Independente sem dispositivo'}
+                    ]})),
+                    calc: items => Object.values(items).reduce((s,v)=>s+(v||0),0),
+                    interpretation: s => s>=30?'Alta funcionalidade':s>=20?'Funcionalidade moderada':'Baixa funcionalidade'
+                },
+                pfit_s: {
+                    id:'pfit_s', name:'PFIT-s', fullName:'Physical Function in ICU Test (scored)', domain:'funcional', range:'0-10',
+                    subtitle:'Physical Function in ICU Test.',
+                    validationUrl:'https://www.scielo.br/j/jbpneu/a/3mvPZgGCnKM4ZJdsqCWPGyy/?format=pdf&lang=pt',
+                    items: [
+                        { id:'sentado', label:'Sentado sem apoio', options:[{v:0,t:'Não realiza'},{v:1,t:'Com apoio'},{v:2,t:'Sem apoio ≤30s'},{v:3,t:'Sem apoio >30s'}] },
+                        { id:'forca', label:'Força (extensão joelho)', options:[{v:0,t:'Grau 0-1'},{v:1,t:'Grau 2'},{v:2,t:'Grau 3'},{v:3,t:'Grau 4-5'}] },
+                        { id:'marcha', label:'Marcha estacionária', options:[{v:0,t:'Não realiza'},{v:1,t:'<30 passos'},{v:2,t:'30-59'},{v:3,t:'≥60'}] },
+                        { id:'ombro', label:'Flexão ombro', options:[{v:0,t:'Não realiza'},{v:1,t:'<45°'},{v:2,t:'45-90°'},{v:3,t:'>90°'}] }
+                    ],
+                    calc: items => Object.values(items).reduce((s,v)=>s+(v||0),0),
+                    interpretation: s => s>=8?'Boa função física':s>=5?'Função moderada':'Função física limitada'
+                },
+                cpax: {
+                    id:'cpax', name:'CPAx', fullName:'Chelsea Critical Care Physical Assessment', domain:'funcional', range:'0-50',
+                    subtitle:'Chelsea Critical Care Physical Assessment Tool. 10 itens, cada um de 0 a 5. Radar disponível para comparação visual.',
+                    validationUrl:'https://sci-hub.box/10.1080/09638288.2021.2022785',
+                    illustrationUrl:'https://ars.els-cdn.com/content/image/1-s2.0-S0031940612000284-fx1.jpg',
+                    isRadar: true,
+                    items: [
+                        { id:'c0', label:'Tosse', help:'0=ausente 1=reflexa 2=voluntária fraca 3=eficaz 4=com secreção 5=forte com expectoração', options:Array.from({length:6},(_,j)=>({v:j,t:'N'+j})) },
+                        { id:'c1', label:'Rolar', help:'0=sem movimento 1=inicia 2=com ajuda 3=supervisão 4=sozinho c/ dispositivo 5=sozinho s/ dispositivo', options:Array.from({length:6},(_,j)=>({v:j,t:'N'+j})) },
+                        { id:'c2', label:'Supino → Sentado', help:'0=dependente 1=muita ajuda 2=moderada 3=mínima 4=supervisão 5=independente', options:Array.from({length:6},(_,j)=>({v:j,t:'N'+j})) },
+                        { id:'c3', label:'Equilíbrio Sentado', help:'0=sem 1=apoio total 2=parcial 3=sem apoio <30s 4=>30s 5=completo', options:Array.from({length:6},(_,j)=>({v:j,t:'N'+j})) },
+                        { id:'c4', label:'Sentado → Em pé', help:'0=dependente 1=muita 2=moderada 3=mínima 4=supervisão 5=independente', options:Array.from({length:6},(_,j)=>({v:j,t:'N'+j})) },
+                        { id:'c5', label:'Equilíbrio em Pé', help:'0=sem 1=apoio total 2=parcial 3=sem apoio <30s 4=>30s 5=completo', options:Array.from({length:6},(_,j)=>({v:j,t:'N'+j})) },
+                        { id:'c6', label:'Transferência', help:'0=dependente 1=muita 2=moderada 3=mínima 4=supervisão 5=independente', options:Array.from({length:6},(_,j)=>({v:j,t:'N'+j})) },
+                        { id:'c7', label:'Marcha', help:'0=não deambula 1=2+ pessoas 2=1 pessoa 3=dispositivo+supervisão 4=dispositivo s/ supervisão 5=independente', options:Array.from({length:6},(_,j)=>({v:j,t:'N'+j})) },
+                        { id:'c8', label:'Força de Preensão', help:'0=sem força 1=esboço 2=fraca 3=moderada 4=forte 5=total', options:Array.from({length:6},(_,j)=>({v:j,t:'N'+j})) },
+                        { id:'c9', label:'Função Respiratória', help:'0=VM total 1=disparo 2=espontânea c/ suporte 3=espontânea s/ suporte 4=exercícios ativos 5=plena', options:Array.from({length:6},(_,j)=>({v:j,t:'N'+j})) }
+                    ],
+                    calc: items => Object.values(items).reduce((s,v)=>s+(v||0),0),
+                    interpretation: s => s>=40?'Alta funcionalidade':s>=25?'Funcionalidade moderada':'Baixa funcionalidade'
+                }
+            };
+
+            Object.values(TOOLS).forEach(tool => {
+                if (!tool.isPerme) {
+                    tool.items.forEach(item => { item.layout = getLayout(item.options); });
+                }
+            });
+
+            function loadStore() { const raw = localStorage.getItem(STORE_KEY); if(raw){ try{ store = JSON.parse(raw); }catch(e){} } if(!store.assessments) store.assessments = {}; if(!store.goals) store.goals = {}; if(!store.quickEvals) store.quickEvals = []; if(!store.settings) store.settings = { darkMode: false }; if(!store.patients) store.patients = []; }
+            function saveStore(){ localStorage.setItem(STORE_KEY, JSON.stringify(store)); }
+
+            let currentView='home', currentPatientId=null, activeToolScores={}, activeAssessmentId=null, isQuickMode=false;
+            function navigate(view, patientId=null){
+                currentView=view; currentOpenToolId=null;
+                if(view==='home'){ currentPatientId=null; isQuickMode=false; activeToolScores={}; activeAssessmentId=null; }
+                if(view==='patient'&&patientId){ currentPatientId=patientId; isQuickMode=false; activeToolScores={}; activeAssessmentId=null; }
+                if(view==='newAssessment'){ activeToolScores={}; activeAssessmentId='assess_'+Date.now(); }
+                if(view==='quickEval'){ isQuickMode=true; activeToolScores={}; activeAssessmentId='quick_'+Date.now(); currentPatientId=null; }
+                destroyCharts(); render(); window.scrollTo({top:0,behavior:'smooth'});
+            }
+            function render(){
+                const main=document.getElementById('mainContent');
+                switch(currentView){ case 'home':main.innerHTML=renderHome();break; case 'patient':main.innerHTML=renderPatient();break; case 'newAssessment':case 'quickEval':main.innerHTML=renderAssessmentPage();break; default:main.innerHTML=renderHome(); }
+                bindGlobalEvents();
+            }
+            function renderHome(){
+                const patients=store.patients.filter(p=>!p.deleted);
+                let listHTML=patients.length===0?'<div class="empty-msg">Nenhum paciente cadastrado.</div>':patients.map(p=>`<div class="patient-row" data-pid="${p.id}"><div class="pat-avatar">${initials(p.name)}</div><div class="pat-name">${esc(p.name)}</div><div class="pat-bed">Leito ${esc(p.bed||'?')}</div></div>`).join('');
+                return `<div class="disclaimer-box">⚠️ <strong>Disclaimer:</strong> Ferramenta de apoio. Não prescreve condutas, não define segurança e não substitui julgamento clínico. <button class="btn btn-xs" id="btnFullDisclaimer" style="margin-left:4px;">Ler mais</button></div>
+                    <div class="highlight-box"><h3>⚡ Avaliação Rápida</h3><p>Pontue escalas sem cadastrar paciente.</p><button class="btn btn-accent-outline btn-block" id="btnQuickEval">Iniciar Avaliação Rápida</button></div>
+                    <div style="display:flex;gap:8px;margin-bottom:10px;"><input type="text" placeholder="🔍 Buscar paciente..." id="searchInput" style="margin-bottom:0;"></div>
+                    <div class="card"><div class="card-header"><span class="ico">👥</span> Pacientes (${patients.length}) <button class="btn btn-primary btn-sm" style="margin-left:auto;" id="btnNewPatientHome">+ Novo</button></div><div id="patientList">${listHTML}</div></div>`;
+            }
+            function renderPatient(){
+                const p=store.patients.find(x=>x.id===currentPatientId); if(!p) return '<p>Não encontrado.</p>';
+                const assessments=store.assessments[currentPatientId]||[], goals=store.goals[currentPatientId]||[];
+                const sorted=[...assessments].sort((a,b)=>new Date(b.date+'T'+(b.time||'00:00'))-new Date(a.date+'T'+(a.time||'00:00')));
+                let trendsHTML='<p class="text-muted text-sm">Realize ao menos 2 avaliações.</p>';
+                if(assessments.length>=2) trendsHTML=renderTrends(assessments);
+                return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;"><button class="btn btn-sm btn-ghost" id="btnBackHome">← Home</button><h2 style="font-size:1.1rem;margin:0;flex:1;">${esc(p.name)} <span style="font-weight:400;font-size:0.8rem;color:var(--text3);">Leito ${esc(p.bed||'?')}</span></h2><button class="btn btn-sm" id="btnEditPatient">✏️</button><button class="btn btn-sm btn-danger" id="btnDeletePatient">🗑️</button></div>
+                    <div class="card"><div class="card-header"><span class="ico">📋</span> Dados</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px;font-size:0.8rem;"><div><strong>Idade:</strong> ${p.age||'—'}</div><div><strong>Sexo:</strong> ${p.sex||'—'}</div><div><strong>Admissão:</strong> ${fmtDate(p.admissionDate)}</div><div><strong>UTI dia:</strong> ${utiDays(p.admissionDate)}</div><div><strong>Diagnóstico:</strong> ${esc(p.diagnosis||'—')}</div></div></div>
+                    <div class="card"><div class="card-header"><span class="ico">📈</span> Tendências</div>${trendsHTML}</div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;"><button class="btn btn-primary" id="btnNewAssessment">+ Nova Avaliação</button><button class="btn" id="btnGoals">🎯 Metas (${goals.filter(g=>!g.completed).length})</button><button class="btn" id="btnEvolReport">📄 Relatório Evolutivo</button><button class="btn" id="btnViewCharts">📊 Gráficos</button></div>
+                    <div class="card"><div class="card-header"><span class="ico">📝</span> Avaliações (${assessments.length})</div>${assessments.length===0?'<p class="text-muted text-sm">Nenhuma.</p>':sorted.map(a=>`<div class="patient-row" data-view-assessment="${a.id}" style="margin-bottom:4px;"><div style="flex:1;"><strong>${fmtDate(a.date)} ${a.time||''}</strong><br><small class="text-muted">${summarizeAssessment(a)}</small></div><span style="color:var(--accent);">→</span></div>`).join('')}</div>`;
+            }
+            function renderAssessmentPage(){
+                const title=isQuickMode?'Avaliação Rápida':`Nova Avaliação - ${esc((store.patients.find(x=>x.id===currentPatientId)||{}).name||'')}`;
+                return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;"><button class="btn btn-sm btn-ghost" id="btnBackFromAssess">← Voltar</button><h2 style="font-size:1.1rem;margin:0;">${title}</h2>${isQuickMode?'<span class="badge badge-up" style="margin-left:8px;">⚡ Rápido</span>':''}</div>
+                    ${!isQuickMode?`<div class="card"><div class="form-grid"><div><label>Data</label><input type="date" id="assessDate" value="${today()}"></div><div><label>Horário</label><input type="time" id="assessTime" value="${nowTime()}"></div></div></div>`:''}
+                    <div class="tabs-row" id="domainTabs">${Object.entries(DOMAIN_GROUPS).map(([key,g],i)=>`<div class="tab-item ${i===0?'active':''}" data-domain="${key}">${g.label}</div>`).join('')}</div>
+                    <div id="domainContent"></div><div class="card mt-8"><label>Observações Clínicas</label><textarea id="assessNotes" placeholder="Registre observações..."></textarea></div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-primary" id="btnSaveAssessment">💾 Salvar</button><button class="btn" id="btnCancelAssessment">Cancelar</button></div>`;
+            }
+            function renderDomainTools(domainKey){
+                const group=DOMAIN_GROUPS[domainKey]; if(!group) return '';
+                let html='<div class="tool-grid">';
+                group.tools.forEach(tid=>{
+                    const tool=TOOLS[tid]; if(!tool)return;
+                    const isOpen = (currentOpenToolId === tid);
+                    const hasScore = activeToolScores[tid] && activeToolScores[tid].score != null;
+                    const scoreDisplay = hasScore ? activeToolScores[tid].score : null;
+                    html+=`<div class="tool-card ${isOpen?'active':''}" data-tool="${tid}">
+                        ${isOpen?'<span class="tool-check">✓</span>':''}
+                        <span class="tool-emoji">📋</span>${tool.name}
+                        <span class="tool-fullname">${tool.fullName||''}</span>
+                        ${scoreDisplay!=null?`<small style="font-weight:700;">${scoreDisplay}</small>`:''}
+                    </div>`;
+                });
+                html+='</div><div id="activeScorer"></div>';
+                return html;
+            }
+            function renderScorer(toolId){
+                const tool=TOOLS[toolId]; if(!tool) return '<p>Não encontrada.</p>';
+                if(tool.isPerme) return renderPermeScorer();
+                const current=activeToolScores[toolId]||{items:{},score:null};
+                let html=`<div class="scorer-container">`;
+                html+=`<div class="scorer-header">`;
+                html+=`<div class="scorer-title">📋 ${tool.name} <small>${tool.fullName||''} (${tool.range})</small></div>`;
+                html+=`<div class="scorer-links">`;
+                if(tool.validationUrl) html+=`<a href="${tool.validationUrl}" target="_blank" class="btn btn-link">🔗 Validação do Score</a>`;
+                if(tool.illustrationUrl){
+                    const illLabel = tool.id==='nihss'?'📄 Escala completa':'🖼️ Ilustração prática';
+                    html+=`<a href="${tool.illustrationUrl}" target="_blank" class="btn btn-link">${illLabel}</a>`;
+                }
+                html+=`</div></div>`;
+                if(tool.subtitle) html+=`<div class="scorer-subtitle">${tool.subtitle}</div>`;
+                tool.items.forEach(item=>{
+                    const selectedVal=current.items[item.id]; const useVertical=item.layout==='vertical';
+                    html+=`<div class="scorer-item ${selectedVal!==undefined?'filled':''}" data-tool="${toolId}" data-item="${item.id}"><div class="scorer-label" style="${useVertical?'width:100%;margin-bottom:4px;':''}">${item.label}${item.help?`<small>${item.help}</small>`:''}</div>`;
+                    if(useVertical){ html+=`<div class="scorer-radio-vertical">`; item.options.forEach(opt=>{html+=`<span class="radio-opt-vertical${selectedVal===opt.v?' selected':''}" data-val="${opt.v}">${opt.t}</span>`;}); html+=`</div>`; }
+                    else { html+=`<div class="scorer-radio">`; item.options.forEach(opt=>{html+=`<span class="radio-opt${selectedVal===opt.v?' selected':''}" data-val="${opt.v}">${opt.t}</span>`;}); html+=`</div>`; }
+                    html+=`</div>`;
+                });
+                const scoreDisplay=current.score!==null&&current.score!==undefined?current.score:'—';
+                html+=`<div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:10px;"><span style="font-weight:700;">Escore:</span><div class="scorer-result">${scoreDisplay}</div></div>`;
+                if(tool.interpretation&&current.score!==null&&current.score!==undefined) html+=`<div class="interpretation-box">💡 <strong>Interpretação:</strong> ${tool.interpretation(current.score)}</div>`;
+                html+=`<button class="btn btn-sm btn-ghost mt-8" data-remove-tool="${toolId}">🗑️ Remover</button></div>`;
+                return html;
+            }
+            function renderPermeScorer(){
+                const current=activeToolScores['perme']||{items:{},score:null};
+                let html=`<div class="scorer-container">`;
+                html+=`<div class="scorer-header">`;
+                html+=`<div class="scorer-title">📋 Perme <small>Perme ICU Mobility Score (0-32)</small></div>`;
+                html+=`<div class="scorer-links">`;
+                html+=`<a href="https://www.scielo.br/j/jbpneu/a/bmQQH8tc6TsLVsKj9ytdr7c/?format=pdf&lang=pt" target="_blank" class="btn btn-link">🔗 Validação do Score</a>`;
+                html+=`<a href="https://www.jornaldepneumologia.com.br/Content/imagebank/pdf/3_provenv_aop_jbp_0301_anexo_pt.pdf" target="_blank" class="btn btn-link">📄 Escala completa</a>`;
+                html+=`</div></div>`;
+                html+=`<div class="scorer-subtitle">Avaliação estruturada da mobilidade funcional do paciente crítico. 7 seções, 17 itens.</div>`;
+
+                // Progress bar
+                const totalScore=calcPermeScore(current.items);
+                let progressClass='progress-low';
+                if(totalScore>=17) progressClass='progress-mid';
+                if(totalScore>=25) progressClass='progress-high';
+                html+=`<div class="progress-bar-container"><div class="progress-bar-fill ${progressClass}" style="width:${(totalScore/32)*100}%"></div></div>`;
+                html+=`<div style="text-align:center;font-size:0.8rem;font-weight:700;color:var(--accent);margin-bottom:8px;">${totalScore} / 32 pontos</div>`;
+
+                // Sections
+                PERME_SECTIONS.forEach((section,idx)=>{
+                    const isOpen=idx===0;
+                    let sectionScore=0;
+                    section.items.forEach(item=>{if(current.items[item.id]!==undefined&&current.items[item.id]!==null) sectionScore+=current.items[item.id];});
+                    html+=`<div class="perme-section">`;
+                    html+=`<div class="perme-section-header ${isOpen?'open':''}" data-perme-section="${section.id}">`;
+                    html+=`<span class="section-icon">${section.icon}</span>`;
+                    html+=`<span>${section.title}</span>`;
+                    html+=`<span class="section-subtotal">${sectionScore}/${section.max}</span>`;
+                    html+=`<span class="section-arrow">▶</span>`;
+                    html+=`</div>`;
+                    html+=`<div class="perme-section-body ${isOpen?'open':''}" data-perme-section-body="${section.id}">`;
+                    section.items.forEach(item=>{
+                        const selectedVal=current.items[item.id];
+                        const useVertical=item.layout==='vertical';
+                        html+=`<div class="scorer-item ${selectedVal!==undefined?'filled':''}" data-tool="perme" data-item="${item.id}">`;
+                        html+=`<div class="scorer-label" style="${useVertical?'width:100%;margin-bottom:4px;':''}">${item.label}${item.help?`<small>${item.help}</small>`:''}</div>`;
+                        if(useVertical){
+                            html+=`<div class="scorer-radio-vertical">`;
+                            item.options.forEach(opt=>{html+=`<span class="radio-opt-vertical${selectedVal===opt.v?' selected':''}" data-val="${opt.v}">${opt.t}</span>`;});
+                            html+=`</div>`;
+                        } else {
+                            html+=`<div class="scorer-radio">`;
+                            item.options.forEach(opt=>{html+=`<span class="radio-opt${selectedVal===opt.v?' selected':''}" data-val="${opt.v}">${opt.t}</span>`;});
+                            html+=`</div>`;
+                        }
+                        html+=`</div>`;
+                    });
+                    html+=`</div></div>`;
+                });
+
+                // Subtotal cards
+                html+=`<div class="subtotal-cards">`;
+                PERME_SECTIONS.forEach(section=>{
+                    let sectionScore=0;
+                    section.items.forEach(item=>{if(current.items[item.id]!==undefined&&current.items[item.id]!==null) sectionScore+=current.items[item.id];});
+                    html+=`<div class="subtotal-card"><span>${section.icon}</span><br><span class="sub-val">${sectionScore}</span><br><span class="sub-max">/ ${section.max}</span></div>`;
+                });
+                html+=`</div>`;
+
+                const finalClassification=getPermeClassification(totalScore);
+                html+=`<div class="perme-final-result">`;
+                html+=`<div class="perme-final-label">Resultado final da Perme Score</div>`;
+                html+=`<div><span class="perme-final-score">${totalScore}</span><span class="perme-final-max">/ 32 pontos</span></div>`;
+                html+=`<div class="perme-final-classification">${finalClassification.label}</div>`;
+                html+=`</div>`;
+
+                // Interpretation
+                if(totalScore>0||Object.keys(current.items).length>0){
+                    const classification=getPermeClassification(totalScore);
+                    html+=`<div class="interpretation-box">💡 <strong>Interpretação:</strong> ${classification.label}</div>`;
+                    // Find most limited section
+                    let minPct=100, minSection='';
+                    PERME_SECTIONS.forEach(section=>{
+                        let sectionScore=0;
+                        section.items.forEach(item=>{if(current.items[item.id]!==undefined&&current.items[item.id]!==null) sectionScore+=current.items[item.id];});
+                        const pct=section.max>0?(sectionScore/section.max)*100:0;
+                        if(pct<minPct){minPct=pct;minSection=section.title;}
+                    });
+                    if(minSection){
+                        html+=`<div class="interpretation-box" style="margin-top:4px;">📌 <strong>Maior limitação:</strong> ${minSection} (${minPct.toFixed(0)}% do máximo)</div>`;
+                    }
+                }
+                html+=`<button class="btn btn-sm btn-ghost mt-8" data-remove-tool="perme">🗑️ Remover</button></div>`;
+                return html;
+            }
+            function renderTrends(assessments){
+                const rows=getPatientTrendRows(assessments);
+                if(rows.length===0) return '<p class="text-muted text-sm">Realize ao menos uma escala pontuada para gerar tendência.</p>';
+                let html='<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+                rows.forEach(row=>{
+                    html+=`<span class="badge ${row.cls}" title="${row.fullName}">${row.label}: ${row.firstScoreText} ${row.arrow} ${row.lastScoreText}${row.deltaText}</span>`;
+                });
+                html+='</div>';
+                return html;
+            }
+            function getToolScore(assessment,toolId){
+                if(!assessment?.tools?.[toolId])return null;
+                const score=assessment.tools[toolId].score;
+                return score===undefined?null:score;
+            }
+            function isNumericScore(value){
+                return typeof value==='number' && Number.isFinite(value);
+            }
+            function formatTrendScore(value){
+                if(value===null||value===undefined||value==='') return '—';
+                return String(value);
+            }
+            function getUsedToolIds(assessments){
+                const ids=[];
+                const seen=new Set();
+                assessments.forEach(a=>{
+                    Object.keys(a.tools||{}).forEach(tid=>{
+                        const score=getToolScore(a,tid);
+                        if(score!==null&&score!==undefined&&score!==''&&!seen.has(tid)){
+                            seen.add(tid);
+                            ids.push(tid);
+                        }
+                    });
+                });
+                return ids;
+            }
+            function getPatientTrendRows(assessments){
+                const sorted=[...assessments].sort((a,b)=>new Date(a.date+'T'+(a.time||'00:00'))-new Date(b.date+'T'+(b.time||'00:00')));
+                const rows=[];
+                getUsedToolIds(sorted).forEach(tid=>{
+                    const tool=TOOLS[tid];
+                    const registros=sorted.filter(a=>{
+                        const score=getToolScore(a,tid);
+                        return score!==null&&score!==undefined&&score!=='';
+                    });
+                    if(registros.length===0)return;
+                    const first=registros[0];
+                    const last=registros[registros.length-1];
+                    const firstScore=getToolScore(first,tid);
+                    const lastScore=getToolScore(last,tid);
+                    let cls='badge-stable',arrow='→',deltaText='';
+                    if(isNumericScore(firstScore)&&isNumericScore(lastScore)){
+                        const diff=lastScore-firstScore;
+                        if(diff>0){cls='badge-up';arrow='↑';deltaText=` (Δ +${diff})`;}
+                        else if(diff<0){cls='badge-down';arrow='↓';deltaText=` (Δ ${diff})`;}
+                        else {deltaText=' (Δ 0)';}
+                    } else if(String(firstScore)!==String(lastScore)){
+                        cls='badge-stable';
+                        arrow='→';
+                        deltaText=' (mudança registrada)';
+                    } else {
+                        deltaText=' (mantido)';
+                    }
+                    rows.push({
+                        toolId:tid,
+                        label:tool?.name||tid,
+                        fullName:tool?.fullName||'',
+                        firstAssessment:first,
+                        lastAssessment:last,
+                        firstScore:firstScore,
+                        lastScore:lastScore,
+                        firstScoreText:formatTrendScore(firstScore),
+                        lastScoreText:formatTrendScore(lastScore),
+                        firstDate:fmtDate(first.date),
+                        lastDate:fmtDate(last.date),
+                        firstTime:first.time||'',
+                        lastTime:last.time||'',
+                        count:registros.length,
+                        cls,arrow,deltaText
+                    });
+                });
+                return rows;
+            }
+            function buildEvolReportText(patient,assessments){
+                const rows=getPatientTrendRows(assessments);
+                let text=`RELATÓRIO EVOLUTIVO - PhysioScore ICU
+==============================
+Paciente: ${patient.name} | Leito: ${patient.bed||'—'}
+`;
+                if(patient.age||patient.sex) text+=`Idade: ${patient.age||'—'} | Sexo: ${patient.sex||'—'}
+`;
+                if(patient.diagnosis) text+=`Diagnóstico: ${patient.diagnosis}
+`;
+                text+=`
+RESULTADOS POR ESCALA
+------------------------------
+`;
+                if(rows.length===0){
+                    text+=`Nenhuma escala pontuada encontrada neste paciente.
+------------------------------
+`;
+                } else {
+                    rows.forEach(row=>{
+                        const firstDateTime=`${row.firstDate}${row.firstTime?' '+row.firstTime:''}`;
+                        const lastDateTime=`${row.lastDate}${row.lastTime?' '+row.lastTime:''}`;
+                        text+=`
+${row.label}${row.fullName?' - '+row.fullName:''}
+`;
+                        text+=`1ª avaliação: ${firstDateTime}
+Resultado da 1ª avaliação: ${row.firstScoreText}
+`;
+                        text+=`Última avaliação: ${lastDateTime}
+Resultado da última avaliação: ${row.lastScoreText}
+`;
+                        text+=`Evolução: ${row.firstScoreText} ${row.arrow} ${row.lastScoreText}${row.deltaText}
+`;
+                        text+=`Registros com esta escala: ${row.count}
+`;
+                        text+=`------------------------------
+`;
+                    });
+                }
+                text+=`
+⚠️ Relatório gerado automaticamente pelo PhysioScore ICU. Ferramenta de apoio, não substitui avaliação clínica.
+@augustocruzfisioterapia`;
+                return text;
+            }
+            function summarizeAssessment(a){if(!a.tools)return'Avaliação registrada';const short={gcs:'GCS',four:'FOUR',rass:'RASS',sas:'SAS',nihss:'NIHSS',cam_icu:'CAM',icdsc:'ICDSC',eva_nrs:'EVA/NRS',bps:'BPS',cpot:'CPOT',mrc_ss:'MRC',ims:'IMS',soms:'SOMS',jh_hlm:'JH-HLM',perme:'Perme',fss_icu:'FSS',pfit_s:'PFIT',cpax:'CPAx'};return Object.entries(a.tools).filter(([tid,t])=>t.score!==null&&t.score!==undefined&&short[tid]).map(([tid,t])=>`${short[tid]}:${t.score}`).join(' · ')||'Avaliação registrada';}
+
+            function bindGlobalEvents(){
+                document.getElementById('logoHome').onclick=()=>navigate('home'); document.getElementById('btnHome').onclick=()=>navigate('home');
+                document.getElementById('darkToggle').onclick=toggleDark;
+                const btnQuick=document.getElementById('btnQuickEval'); if(btnQuick)btnQuick.onclick=()=>navigate('quickEval');
+                const btnNewPatHome=document.getElementById('btnNewPatientHome'); if(btnNewPatHome)btnNewPatHome.onclick=()=>showPatientModal(false);
+                const btnFullDisc=document.getElementById('btnFullDisclaimer'); if(btnFullDisc)btnFullDisc.onclick=showFullDisclaimer;
+                document.querySelectorAll('.patient-row[data-pid]').forEach(el=>{el.onclick=function(){navigate('patient',this.dataset.pid);}});
+                const searchInput=document.getElementById('searchInput'); if(searchInput)searchInput.oninput=filterPatients;
+                const btnBackHome=document.getElementById('btnBackHome'); if(btnBackHome)btnBackHome.onclick=()=>navigate('home');
+                const btnEdit=document.getElementById('btnEditPatient'); if(btnEdit)btnEdit.onclick=()=>showPatientModal(true);
+                const btnDelete=document.getElementById('btnDeletePatient'); if(btnDelete)btnDelete.onclick=deletePatient;
+                const btnNewAssess=document.getElementById('btnNewAssessment'); if(btnNewAssess)btnNewAssess.onclick=()=>navigate('newAssessment');
+                const btnGoals=document.getElementById('btnGoals'); if(btnGoals)btnGoals.onclick=showGoalsModal;
+                const btnEvol=document.getElementById('btnEvolReport'); if(btnEvol)btnEvol.onclick=showEvolReportModal;
+                const btnCharts=document.getElementById('btnViewCharts'); if(btnCharts)btnCharts.onclick=showChartsModal;
+                document.querySelectorAll('[data-view-assessment]').forEach(el=>{el.onclick=function(){viewAssessmentModal(this.dataset.viewAssessment);}});
+                const btnBackAssess=document.getElementById('btnBackFromAssess'); if(btnBackAssess)btnBackAssess.onclick=()=>{if(isQuickMode)navigate('home');else navigate('patient',currentPatientId);};
+                const btnCancel=document.getElementById('btnCancelAssessment'); if(btnCancel)btnCancel.onclick=()=>{if(isQuickMode)navigate('home');else navigate('patient',currentPatientId);};
+                const btnSave=document.getElementById('btnSaveAssessment'); if(btnSave)btnSave.onclick=saveAssessment;
+                const domainTabs=document.querySelectorAll('#domainTabs .tab-item');
+                if(domainTabs.length>0){domainTabs.forEach(tab=>{tab.onclick=function(){domainTabs.forEach(t=>t.classList.remove('active'));this.classList.add('active');document.getElementById('domainContent').innerHTML=renderDomainTools(this.dataset.domain);bindScorerEvents();}});document.getElementById('domainContent').innerHTML=renderDomainTools(Object.keys(DOMAIN_GROUPS)[0]);bindScorerEvents();}
+            }
+            function bindScorerEvents(){
+                document.querySelectorAll('.tool-card[data-tool]').forEach(card=>{
+                    card.onclick=function(){
+                        const toolId=this.dataset.tool;
+                        if(!activeToolScores[toolId]) activeToolScores[toolId]={items:{},score:null};
+                        currentOpenToolId=toolId;
+                        const activeDomain=document.querySelector('#domainTabs .tab-item.active');
+                        if(activeDomain){
+                            document.getElementById('domainContent').innerHTML=renderDomainTools(activeDomain.dataset.domain);
+                            bindScorerEvents();
+                        }
+                        document.getElementById('activeScorer').innerHTML=renderScorer(toolId);
+                        if(toolId==='perme') bindPermeEvents();
+                        else bindScorerItemClicks(toolId);
+                    };
+                });
+                document.querySelectorAll('[data-remove-tool]').forEach(btn=>{
+                    btn.onclick=function(e){
+                        e.stopPropagation();
+                        const toolId=this.dataset.removeTool;
+                        delete activeToolScores[toolId];
+                        currentOpenToolId=null;
+                        const activeDomain=document.querySelector('#domainTabs .tab-item.active');
+                        if(activeDomain){
+                            document.getElementById('domainContent').innerHTML=renderDomainTools(activeDomain.dataset.domain);
+                            bindScorerEvents();
+                        }
+                        document.getElementById('activeScorer').innerHTML='<p class="text-muted text-sm">Selecione uma ferramenta.</p>';
+                    };
+                });
+                const existingTool=document.querySelector('.scorer-item[data-tool]');
+                if(existingTool) bindScorerItemClicks(existingTool.dataset.tool);
+                // Bind perme section toggles
+                bindPermeSectionToggles();
+            }
+            function bindPermeSectionToggles(){
+                document.querySelectorAll('.perme-section-header[data-perme-section]').forEach(header=>{
+                    header.onclick=function(){
+                        const sectionId=this.dataset.permeSection;
+                        const body=document.querySelector(`[data-perme-section-body="${sectionId}"]`);
+                        if(body){
+                            const isOpen=body.classList.contains('open');
+                            if(isOpen){body.classList.remove('open');this.classList.remove('open');}
+                            else {body.classList.add('open');this.classList.add('open');}
+                        }
+                    };
+                });
+            }
+            
+            // ============ NOVA FUNÇÃO: Atualiza visuais da Perme sem recriar HTML ============
+            function updatePermeVisuals(container) {
+                const current = activeToolScores['perme'] || {items:{},score:null};
+                const totalScore = calcPermeScore(current.items);
+                
+                // Atualiza barra de progresso superior
+                const progressFill = container.querySelector('.progress-bar-fill');
+                if(progressFill) {
+                    let progressClass = 'progress-low';
+                    if(totalScore >= 17) progressClass = 'progress-mid';
+                    if(totalScore >= 25) progressClass = 'progress-high';
+                    progressFill.className = 'progress-bar-fill ' + progressClass;
+                    progressFill.style.width = ((totalScore/32)*100) + '%';
+                }
+                
+                // Atualiza texto de pontuação
+                const scoreText = container.querySelector('.scorer-subtitle + div + div');
+                if(scoreText) {
+                    scoreText.textContent = totalScore + ' / 32 pontos';
+                }
+                
+                // Atualiza subtotais nos cabeçalhos das seções
+                const sectionHeaders = container.querySelectorAll('.perme-section-header[data-perme-section]');
+                sectionHeaders.forEach(header => {
+                    const sectionId = header.getAttribute('data-perme-section');
+                    const section = PERME_SECTIONS.find(s => s.id === sectionId);
+                    if(section) {
+                        let sectionScore = 0;
+                        section.items.forEach(item => {
+                            if(current.items[item.id] !== undefined && current.items[item.id] !== null) {
+                                sectionScore += current.items[item.id];
+                            }
+                        });
+                        const subtotalSpan = header.querySelector('.section-subtotal');
+                        if(subtotalSpan) {
+                            subtotalSpan.textContent = sectionScore + '/' + section.max;
+                        }
+                    }
+                });
+                
+                // Atualiza subtotal cards
+                const subtotalCards = container.querySelectorAll('.subtotal-card');
+                subtotalCards.forEach((card, idx) => {
+                    if(idx < PERME_SECTIONS.length) {
+                        const section = PERME_SECTIONS[idx];
+                        let sectionScore = 0;
+                        section.items.forEach(item => {
+                            if(current.items[item.id] !== undefined && current.items[item.id] !== null) {
+                                sectionScore += current.items[item.id];
+                            }
+                        });
+                        const subVal = card.querySelector('.sub-val');
+                        if(subVal) subVal.textContent = sectionScore;
+                    }
+                });
+                
+                // Atualiza resultado final grande
+                const finalScoreEl = container.querySelector('.perme-final-score');
+                if(finalScoreEl) finalScoreEl.textContent = totalScore;
+                const finalClassificationEl = container.querySelector('.perme-final-classification');
+                if(finalClassificationEl) finalClassificationEl.textContent = getPermeClassification(totalScore).label;
+
+                // Atualiza interpretação e maior limitação
+                const interpretationBoxes = container.querySelectorAll('.interpretation-box');
+                if(interpretationBoxes.length > 0 && (totalScore > 0 || Object.keys(current.items).length > 0)) {
+                    const classification = getPermeClassification(totalScore);
+                    interpretationBoxes[0].innerHTML = '💡 <strong>Interpretação:</strong> ' + classification.label;
+                    
+                    if(interpretationBoxes.length > 1) {
+                        let minPct = 100, minSection = '';
+                        PERME_SECTIONS.forEach(section => {
+                            let sectionScore = 0;
+                            section.items.forEach(item => {
+                                if(current.items[item.id] !== undefined && current.items[item.id] !== null) {
+                                    sectionScore += current.items[item.id];
+                                }
+                            });
+                            const pct = section.max > 0 ? (sectionScore/section.max)*100 : 0;
+                            if(pct < minPct) { minPct = pct; minSection = section.title; }
+                        });
+                        if(minSection) {
+                            interpretationBoxes[1].innerHTML = '📌 <strong>Maior limitação:</strong> ' + minSection + ' (' + minPct.toFixed(0) + '% do máximo)';
+                        }
+                    }
+                }
+                
+                // Atualiza apenas o card da Perme no grid, sem recriar o activeScorer
+                const permeCard = document.querySelector('.tool-card[data-tool="perme"]');
+                if(permeCard) {
+                    let scoreEl = permeCard.querySelector('small');
+                    if(!scoreEl) {
+                        scoreEl = document.createElement('small');
+                        scoreEl.style.fontWeight = '700';
+                        permeCard.appendChild(scoreEl);
+                    }
+                    scoreEl.textContent = totalScore;
+                }
+            }
+            
+            function bindPermeEvents(){
+                bindPermeSectionToggles();
+                const container = document.getElementById('activeScorer'); 
+                if(!container) return;
+                container.querySelectorAll('.scorer-item[data-tool="perme"]').forEach(item => {
+                    const itemId = item.dataset.item;
+                    const allOpts = item.querySelectorAll('.radio-opt, .radio-opt-vertical');
+                    allOpts.forEach(opt => {
+                        opt.onclick = function(e){
+                            e.stopPropagation();
+                            const val = isNaN(this.dataset.val) ? this.dataset.val : parseFloat(this.dataset.val);
+                            // Atualiza visualmente sem recriar HTML
+                            allOpts.forEach(o => o.classList.remove('selected'));
+                            this.classList.add('selected');
+                            item.classList.add('filled');
+                            // Atualiza dados
+                            if(!activeToolScores['perme']) activeToolScores['perme'] = {items:{},score:null};
+                            activeToolScores['perme'].items[itemId] = val;
+                            activeToolScores['perme'].score = calcPermeScore(activeToolScores['perme'].items);
+                            // Atualiza APENAS os elementos visuais, sem recriar tudo
+                            updatePermeVisuals(container);
+                        };
+                    });
+                });
+            }
+            
+            function bindScorerItemClicks(toolId){
+                const container=document.getElementById('activeScorer'); if(!container)return;
+                container.querySelectorAll('.scorer-item[data-tool]').forEach(item=>{
+                    const itemId=item.dataset.item;
+                    const allOpts=item.querySelectorAll('.radio-opt, .radio-opt-vertical');
+                    allOpts.forEach(opt=>{
+                        opt.onclick=function(e){
+                            e.stopPropagation();
+                            const val=isNaN(this.dataset.val)?this.dataset.val:parseFloat(this.dataset.val);
+                            allOpts.forEach(o=>o.classList.remove('selected'));
+                            this.classList.add('selected');
+                            item.classList.add('filled');
+                            if(!activeToolScores[toolId]) activeToolScores[toolId]={items:{},score:null};
+                            activeToolScores[toolId].items[itemId]=val;
+                            const tool=TOOLS[toolId];
+                            if(tool) activeToolScores[toolId].score=tool.calc(activeToolScores[toolId].items);
+                            container.innerHTML=renderScorer(toolId);
+                            bindScorerItemClicks(toolId);
+                            const activeDomain=document.querySelector('#domainTabs .tab-item.active');
+                            if(activeDomain){
+                                document.getElementById('domainContent').innerHTML=renderDomainTools(activeDomain.dataset.domain);
+                                bindScorerEvents();
+                                document.getElementById('activeScorer').innerHTML=renderScorer(toolId);
+                                bindScorerItemClicks(toolId);
+                            }
+                        };
+                    });
+                });
+            }
+            function saveAssessment(){
+                const date=document.getElementById('assessDate')?.value||today(),time=document.getElementById('assessTime')?.value||nowTime(),notes=document.getElementById('assessNotes')?.value||'';
+                if(Object.keys(activeToolScores).length===0){alert('Selecione ao menos uma ferramenta.');return;}
+                const assessment={id:activeAssessmentId,date:isQuickMode?today():date,time:isQuickMode?nowTime():time,tools:JSON.parse(JSON.stringify(activeToolScores)),notes,isQuick:isQuickMode};
+                if(isQuickMode){store.quickEvals.push(assessment);saveStore();alert('Avaliação rápida salva!');navigate('home');}
+                else {if(!store.assessments[currentPatientId])store.assessments[currentPatientId]=[];store.assessments[currentPatientId].push(assessment);saveStore();navigate('patient',currentPatientId);}
+                activeToolScores={};activeAssessmentId=null;
+            }
+            function showPatientModal(editMode=false){
+                let p=null;if(editMode)p=store.patients.find(x=>x.id===currentPatientId);
+                document.getElementById('modalPatientInner').innerHTML=`<h3>${editMode?'Editar':'Novo'} Paciente</h3><div class="form-grid"><div><label>Nome ou Iniciais *</label><input type="text" id="fName" value="${esc(p?.name||'')}" placeholder="Ex: A.B.C."></div><div><label>Leito *</label><input type="text" id="fBed" value="${esc(p?.bed||'')}" placeholder="Ex: 12"></div></div><div class="form-grid"><div><label>Idade</label><input type="number" id="fAge" value="${p?.age||''}" min="0" max="120"></div><div><label>Sexo</label><select id="fSex"><option value="">—</option><option value="F" ${p?.sex=='F'?'selected':''}>Feminino</option><option value="M" ${p?.sex=='M'?'selected':''}>Masculino</option></select></div></div><div><label>Diagnóstico</label><input type="text" id="fDiag" value="${esc(p?.diagnosis||'')}"></div><div><label>Admissão UTI</label><input type="date" id="fAdm" value="${p?.admissionDate||today()}"></div><div><label>Observações</label><textarea id="fNotes">${esc(p?.notes||'')}</textarea></div><div class="flex-wrap gap-8"><button class="btn btn-primary" id="btnSavePatientModal">${editMode?'Salvar':'Cadastrar'}</button><button class="btn" id="btnClosePatientModal">Cancelar</button></div>`;
+                document.getElementById('modalPatient').classList.remove('hidden');
+                document.getElementById('btnSavePatientModal').onclick=()=>savePatient(editMode);
+                document.getElementById('btnClosePatientModal').onclick=()=>document.getElementById('modalPatient').classList.add('hidden');
+            }
+            function savePatient(editMode){
+                const name=document.getElementById('fName')?.value?.trim(),bed=document.getElementById('fBed')?.value?.trim();
+                if(!name){alert('Nome obrigatório.');return;}if(!bed){alert('Leito obrigatório.');return;}
+                const data={name,bed,age:document.getElementById('fAge')?.value||'',sex:document.getElementById('fSex')?.value||'',diagnosis:document.getElementById('fDiag')?.value||'',admissionDate:document.getElementById('fAdm')?.value||today(),notes:document.getElementById('fNotes')?.value||''};
+                if(editMode){const p=store.patients.find(x=>x.id===currentPatientId);if(p)Object.assign(p,data);}
+                else{data.id='pat_'+Date.now();data.deleted=false;store.patients.push(data);currentPatientId=data.id;}
+                saveStore();document.getElementById('modalPatient').classList.add('hidden');
+                if(editMode)navigate('patient',currentPatientId);else navigate('patient',data.id);
+            }
+            function deletePatient(){if(confirm('Excluir?')){const p=store.patients.find(x=>x.id===currentPatientId);if(p){p.deleted=true;saveStore();navigate('home');}}}
+            function viewAssessmentModal(assessmentId){
+                const assessments=store.assessments[currentPatientId]||[],a=assessments.find(x=>x.id===assessmentId),p=store.patients.find(x=>x.id===currentPatientId);if(!a||!p)return;
+                let toolsHTML='';if(a.tools){Object.entries(a.tools).forEach(([tid,t])=>{const toolDef=TOOLS[tid];if(toolDef&&t.score!==null&&t.score!==undefined)toolsHTML+=`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);"><span>${toolDef.name}</span><strong>${t.score}</strong></div>`;});}
+                document.getElementById('modalReportInner').innerHTML=`<h3>📋 Avaliação - ${esc(p.name)}</h3><p><strong>Data:</strong> ${fmtDate(a.date)} ${a.time||''}</p>${toolsHTML||'<p class="text-muted">Nenhuma ferramenta.</p>'}${a.notes?`<div class="card mt-8"><strong>Obs:</strong><br>${esc(a.notes)}</div>`:''}<div class="flex-wrap gap-8 mt-8"><button class="btn btn-primary" id="btnCopyReportModal">📋 Copiar</button><button class="btn" id="btnCloseReportModal">Fechar</button></div>`;
+                document.getElementById('modalReport').classList.remove('hidden');document.getElementById('btnCloseReportModal').onclick=()=>document.getElementById('modalReport').classList.add('hidden');document.getElementById('btnCopyReportModal').onclick=()=>copyReport(a,p);
+            }
+            function copyReport(assessment,patient){let text=`RELATÓRIO - PhysioScore ICU\n==============================\nPaciente: ${patient.name} | Leito: ${patient.bed||'—'}\nData: ${fmtDate(assessment.date)} ${assessment.time||''}\n------------------------------\n`;if(assessment.tools){Object.entries(assessment.tools).forEach(([tid,t])=>{const toolDef=TOOLS[tid];if(toolDef&&t.score!==null&&t.score!==undefined)text+=`${toolDef.name}: ${t.score}\n`;});}if(assessment.notes)text+=`Obs: ${assessment.notes}\n`;text+=`------------------------------\n⚠️ Não substitui avaliação clínica.\n@augustocruzfisioterapia\n`;navigator.clipboard.writeText(text).then(()=>alert('Copiado!')).catch(()=>alert('Erro.'));}
+            function showGoalsModal(){const goals=store.goals[currentPatientId]||[],opts=['Sedestação beira leito','Ortostatismo','Transferência','Sentar fora do leito','Marcha estacionária','Marcha assistida','Cicloergômetro','Treino funcional'];document.getElementById('modalReportInner').innerHTML=`<h3>🎯 Metas</h3><div>${goals.length===0?'<p class="text-muted">Nenhuma.</p>':goals.map((g,i)=>`<div class="scorer-item" style="justify-content:space-between;"><span style="${g.completed?'text-decoration:line-through;color:var(--text3);':''}">${esc(g.goal)}</span><button class="btn btn-xs ${g.completed?'btn-ghost':'btn-primary'}" data-toggle-goal="${i}">${g.completed?'✓':'Concluir'}</button></div>`).join('')}</div><div class="flex-wrap gap-8 mt-8"><select id="newGoalSel" style="flex:1;margin:0;"><option value="">Nova meta...</option>${opts.map(o=>`<option>${o}</option>`).join('')}</select><button class="btn btn-primary" id="btnAddGoalModal">+</button></div><button class="btn mt-8" id="btnCloseGoalsModal">Fechar</button>`;document.getElementById('modalReport').classList.remove('hidden');document.getElementById('btnCloseGoalsModal').onclick=()=>document.getElementById('modalReport').classList.add('hidden');document.getElementById('btnAddGoalModal').onclick=()=>{const sel=document.getElementById('newGoalSel');if(!sel.value)return;if(!store.goals[currentPatientId])store.goals[currentPatientId]=[];store.goals[currentPatientId].push({goal:sel.value,date:today(),completed:false});saveStore();showGoalsModal();};document.querySelectorAll('[data-toggle-goal]').forEach(b=>{b.onclick=function(){const i=parseInt(this.dataset.toggleGoal);if(store.goals[currentPatientId]?.[i]){store.goals[currentPatientId][i].completed=!store.goals[currentPatientId][i].completed;saveStore();showGoalsModal();}};});}
+            function showEvolReportModal(){
+                const assessments=store.assessments[currentPatientId]||[],p=store.patients.find(x=>x.id===currentPatientId);if(!p)return;
+                const rows=getPatientTrendRows(assessments);
+                const reportText=buildEvolReportText(p,assessments);
+                let html=`<h3>📄 Relatório Evolutivo por Escala - ${esc(p.name)}</h3>`;
+                html+=`<div class="badge badge-up" style="margin-bottom:10px;">Versão do relatório: por escala, com 1ª e última avaliação</div>`;
+                html+=`<div class="card" style="margin-bottom:10px;">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px;font-size:0.8rem;">
+                        <div><strong>Paciente:</strong> ${esc(p.name)}</div>
+                        <div><strong>Leito:</strong> ${esc(p.bed||'—')}</div>
+                        <div><strong>Idade:</strong> ${p.age||'—'}</div>
+                        <div><strong>Sexo:</strong> ${p.sex||'—'}</div>
+                    </div>
+                    ${p.diagnosis?`<div class="mt-8 text-sm"><strong>Diagnóstico:</strong> ${esc(p.diagnosis)}</div>`:''}
+                </div>`;
+                html+=`<div class="card"><div class="card-header"><span class="ico">📈</span> Resultados por escala</div>`;
+                if(rows.length===0){
+                    html+=`<p class="text-muted text-sm">Ainda não há escalas pontuadas para gerar relatório evolutivo.</p>`;
+                } else {
+                    html+=`<div style="display:flex;flex-direction:column;gap:8px;">`;
+                    rows.forEach(row=>{
+                        html+=`<div class="scorer-item" style="margin-bottom:0;align-items:flex-start;">
+                            <div style="flex:1;min-width:180px;">
+                                <strong>${row.label}</strong><br>
+                                <small class="text-muted">${row.fullName}</small><br>
+                                <small class="text-muted">Registros com esta escala: ${row.count}</small>
+                            </div>
+                            <div style="text-align:right;min-width:190px;">
+                                <small class="text-muted"><strong>1ª avaliação:</strong> ${row.firstDate}${row.firstTime?' '+row.firstTime:''}</small><br>
+                                <strong>${row.firstScoreText}</strong><br>
+                                <small class="text-muted"><strong>Última avaliação:</strong> ${row.lastDate}${row.lastTime?' '+row.lastTime:''}</small><br>
+                                <strong>${row.lastScoreText}</strong><br>
+                                <span class="badge ${row.cls}" style="margin-top:5px;">${row.firstScoreText} ${row.arrow} ${row.lastScoreText}${row.deltaText}</span>
+                            </div>
+                        </div>`;
+                    });
+                    html+=`</div>`;
+                }
+                html+=`</div>`;
+                html+=`<div class="card"><div class="card-header"><span class="ico">📋</span> Texto que será copiado</div><textarea id="evolReportTextPreview" readonly style="min-height:260px;font-size:0.75rem;line-height:1.45;white-space:pre-wrap;">${esc(reportText)}</textarea><p class="text-xs text-muted">Se o navegador bloquear a área de transferência, selecione este texto manualmente.</p></div>`;
+                html+=`<div class="disclaimer-box">⚠️ Ferramenta de apoio. O relatório organiza os registros funcionais, mas não substitui avaliação clínica, julgamento profissional ou protocolos institucionais.</div>`;
+                html+=`<div class="flex-wrap gap-8 mt-8"><button class="btn btn-primary" id="btnCopyEvolReport">📋 Copiar relatório</button><button class="btn" id="btnSelectEvolReport">Selecionar texto</button><button class="btn" id="btnCloseEvolReport">Fechar</button></div>`;
+                document.getElementById('modalReportInner').innerHTML=html;
+                document.getElementById('modalReport').classList.remove('hidden');
+                document.getElementById('btnCloseEvolReport').onclick=()=>document.getElementById('modalReport').classList.add('hidden');
+                document.getElementById('btnSelectEvolReport').onclick=()=>{const preview=document.getElementById('evolReportTextPreview');if(preview){preview.focus();preview.select();}};
+                document.getElementById('btnCopyEvolReport').onclick=()=>copyTextToClipboard(reportText,'Relatório evolutivo copiado. Confira colando em um bloco de notas.');
+            }
+
+
+            function copyTextToClipboard(text,successMessage){
+                if(navigator.clipboard && window.isSecureContext){
+                    navigator.clipboard.writeText(text).then(()=>alert(successMessage||'Texto copiado!')).catch(()=>fallbackCopyText(text,successMessage));
+                } else {
+                    fallbackCopyText(text,successMessage);
+                }
+            }
+            function fallbackCopyText(text,successMessage){
+                const temp=document.createElement('textarea');
+                temp.value=text;
+                temp.setAttribute('readonly','');
+                temp.style.position='fixed';
+                temp.style.top='-1000px';
+                temp.style.left='-1000px';
+                document.body.appendChild(temp);
+                temp.focus();
+                temp.select();
+                let copied=false;
+                try{copied=document.execCommand('copy');}catch(e){copied=false;}
+                document.body.removeChild(temp);
+                if(copied) alert(successMessage||'Texto copiado!');
+                else {
+                    const preview=document.getElementById('evolReportTextPreview');
+                    if(preview){preview.focus();preview.select();}
+                    alert('Não consegui atualizar a área de transferência automaticamente. O texto ficou selecionado na janela para copiar manualmente.');
+                }
+            }
+
+            function showFullDisclaimer(){document.getElementById('modalDisclaimerInner').innerHTML=`<h3>⚠️ Disclaimer Clínico</h3><p>Ferramenta de apoio. <strong>Não:</strong></p><ul style="padding-left:18px;line-height:2;"><li>Prescreve condutas</li><li>Define segurança</li><li>Substitui protocolos</li><li>Substitui avaliação multiprofissional</li><li>Realiza diagnóstico</li><li>Automatiza decisões</li></ul><p><strong>Toda decisão é de responsabilidade do profissional assistente.</strong></p><button class="btn btn-primary" id="btnCloseDisclaimer">Entendi</button>`;document.getElementById('modalDisclaimer').classList.remove('hidden');document.getElementById('btnCloseDisclaimer').onclick=()=>document.getElementById('modalDisclaimer').classList.add('hidden');}
+
+            function destroyCharts(){Object.values(chartInstances).forEach(c=>{try{c.destroy();}catch(e){}});chartInstances={};}
+            function showChartsModal(){
+                const assessments=store.assessments[currentPatientId]||[],p=store.patients.find(x=>x.id===currentPatientId);if(!p)return;
+                if(assessments.length<2){alert('Necessário ao menos 2 avaliações.');return;}
+                const sorted=[...assessments].sort((a,b)=>new Date(a.date+'T'+(a.time||'00:00'))-new Date(b.date+'T'+(b.time||'00:00')));
+                const toolIds=Object.keys(TOOLS).filter(tid=>sorted.some(a=>a.tools?.[tid]?.score!=null));
+                if(toolIds.length===0){alert('Nenhuma ferramenta pontuada.');return;}
+                let html=`<h3>📊 Gráficos - ${esc(p.name)}</h3><div style="max-height:70vh;overflow-y:auto;">`;
+                toolIds.forEach(tid=>{
+                    const tool=TOOLS[tid]; if(!tool)return;
+                    const dataPoints=sorted.filter(a=>a.tools?.[tid]?.score!=null).map(a=>({date:fmtDate(a.date),score:a.tools[tid].score}));
+                    if(dataPoints.length<2)return;
+                    if(tool.isRadar){
+                        const first=sorted.find(a=>a.tools?.[tid]?.score!=null);
+                        const last=[...sorted].reverse().find(a=>a.tools?.[tid]?.score!=null);
+                        const firstScore=first?.tools[tid]?.score??'?';
+                        const lastScore=last?.tools[tid]?.score??'?';
+                        const diff=lastScore!=='?'&&firstScore!=='?'?lastScore-firstScore:null;
+                        html+=`<div class="card"><div class="card-header">🕸️ ${tool.name} (Radar)</div>
+                            <div class="chart-container"><canvas id="radar_${tid}" width="380" height="380"></canvas></div>
+                            <div class="radar-legend">
+                                <span><span class="legend-dash"></span> Linha de base (${fmtDate(first?.date||'?')})</span>
+                                <span><span class="legend-solid"></span> Atual (${fmtDate(last?.date||'?')})</span>
+                            </div>
+                            ${diff!==null?`<p class="text-xs text-muted" style="text-align:center;">Evolução: ${firstScore} → ${lastScore} (${diff>=0?'+':''}${diff} pontos | ${firstScore>0?((diff/firstScore)*100).toFixed(0):0}%)</p>`:''}
+                        </div>`;
+                    } else {
+                        html+=`<div class="card"><div class="card-header">📈 ${tool.name}</div><div class="line-chart-container"><canvas id="line_${tid}" width="500" height="180"></canvas></div></div>`;
+                    }
+                });
+                html+=`</div><button class="btn mt-8" id="btnCloseCharts">Fechar</button>`;
+                document.getElementById('modalChartInner').innerHTML=html;
+                document.getElementById('modalChart').classList.remove('hidden');
+                document.getElementById('btnCloseCharts').onclick=()=>{destroyCharts();document.getElementById('modalChart').classList.add('hidden');};
+                setTimeout(()=>{
+                    toolIds.forEach(tid=>{
+                        const tool=TOOLS[tid]; if(!tool)return;
+                        const dataPoints=sorted.filter(a=>a.tools?.[tid]?.score!=null).map(a=>({date:fmtDate(a.date),score:a.tools[tid].score}));
+                        if(dataPoints.length<2)return;
+                        if(tool.isRadar){
+                            const first=sorted.find(a=>a.tools?.[tid]?.score!=null);
+                            const last=[...sorted].reverse().find(a=>a.tools?.[tid]?.score!=null);
+                            if(first&&last&&first.tools[tid].items&&last.tools[tid].items) renderRadarChart(tid,tool,first.tools[tid].items,last.tools[tid].items,first,last);
+                        } else {
+                            renderLineChart(tid,tool.name,dataPoints);
+                        }
+                    });
+                },300);
+            }
+            function renderLineChart(tid,label,dataPoints){
+                const ctx=document.getElementById('line_'+tid); if(!ctx)return;
+                if(chartInstances['line_'+tid]) chartInstances['line_'+tid].destroy();
+                chartInstances['line_'+tid]=new Chart(ctx,{type:'line',data:{labels:dataPoints.map(d=>d.date),datasets:[{label:label,data:dataPoints.map(d=>d.score),borderColor:'#0d9488',backgroundColor:'rgba(13,148,136,0.1)',fill:true,tension:0.3,pointRadius:5,pointBackgroundColor:'#0d9488'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,grid:{color:'rgba(0,0,0,0.06)'}}}}});
+            }
+            function renderRadarChart(tid,tool,firstItems,lastItems,firstAssess,lastAssess){
+                const ctx=document.getElementById('radar_'+tid); if(!ctx)return;
+                if(chartInstances['radar_'+tid]) chartInstances['radar_'+tid].destroy();
+                const labels=tool.items.map(i=>i.label);
+                const firstData=tool.items.map(i=>firstItems[i.id]??0);
+                const lastData=tool.items.map(i=>lastItems[i.id]??0);
+                chartInstances['radar_'+tid]=new Chart(ctx,{type:'radar',data:{labels:labels,datasets:[
+                    {label:'Linha de base ('+fmtDate(firstAssess?.date||'?')+')',data:firstData,borderColor:'rgba(13,148,136,0.4)',backgroundColor:'rgba(13,148,136,0.05)',borderWidth:1.5,borderDash:[6,4],pointRadius:3,pointBackgroundColor:'rgba(13,148,136,0.4)',pointBorderColor:'rgba(13,148,136,0.4)'},
+                    {label:'Atual ('+fmtDate(lastAssess?.date||'?')+')',data:lastData,borderColor:'#0d9488',backgroundColor:'rgba(13,148,136,0.2)',borderWidth:3,pointRadius:5,pointBackgroundColor:'#0d9488',pointBorderColor:'#fff',pointBorderWidth:2}
+                ]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{r:{beginAtZero:true,max:5,ticks:{stepSize:1,font:{size:9}},grid:{color:'rgba(0,0,0,0.1)'},pointLabels:{font:{size:9}}}}}});
+            }
+
+            function toggleDark(){store.settings.darkMode=!store.settings.darkMode;applyDark();saveStore();}
+            function applyDark(){if(store.settings.darkMode){document.body.classList.add('dark');document.getElementById('darkToggle').innerHTML='☀️';}else{document.body.classList.remove('dark');document.getElementById('darkToggle').innerHTML='🌙';}}
+            function today(){return new Date().toISOString().split('T')[0];}
+            function nowTime(){return new Date().toTimeString().slice(0,5);}
+            function fmtDate(d){if(!d)return'—';const[y,m,day]=d.split('-');return`${day}/${m}/${y}`;}
+            function utiDays(ad){if(!ad)return'?';return Math.max(0,Math.floor((new Date()-new Date(ad+'T00:00:00'))/86400000));}
+            function initials(n){if(!n)return'?';const p=n.trim().split(/\s+/);return p.length>1?(p[0][0]+p[p.length-1][0]).toUpperCase():p[0].slice(0,2).toUpperCase();}
+            function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+            function filterPatients(){const q=document.getElementById('searchInput')?.value?.toLowerCase()||'';const patients=store.patients.filter(p=>!p.deleted);const filtered=patients.filter(p=>p.name.toLowerCase().includes(q)||(p.bed||'').toLowerCase().includes(q));const container=document.getElementById('patientList');if(container){container.innerHTML=filtered.length===0?'<div class="empty-msg">Nenhum.</div>':filtered.map(p=>`<div class="patient-row" data-pid="${p.id}"><div class="pat-avatar">${initials(p.name)}</div><div class="pat-name">${esc(p.name)}</div><div class="pat-bed">Leito ${esc(p.bed||'?')}</div></div>`).join('');container.querySelectorAll('.patient-row[data-pid]').forEach(el=>{el.onclick=function(){navigate('patient',this.dataset.pid);}});}}
+            document.addEventListener('click',function(e){if(e.target.classList.contains('modal-overlay'))e.target.classList.add('hidden');});
+            function init(){loadStore();applyDark();if(!localStorage.getItem('psicu_disc_v10_fix')){localStorage.setItem('psicu_disc_v10_fix','1');setTimeout(showFullDisclaimer,600);}navigate('home');}
+            init();
+        })();
+    </script>
+</body>
+</html>
