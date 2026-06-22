@@ -1,4 +1,4 @@
-const CACHE_NAME = 'physioscore-icu-v1.0.0';
+const CACHE_NAME = 'physioscore-icu-v1.0.1';
 
 const BASE_PATH = '/PhysioScoreICU';
 
